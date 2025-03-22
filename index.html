@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,190 +5,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AJC Group of Company</title>
     <style>
-        /* Global Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: green;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            overflow-x: hidden; /* Prevent horizontal scrolling */
-        }
+       /* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: green;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding-left: 10px;  /* Add padding on the left */
+    padding-right: 10px; /* Add padding on the right */
+}
 
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+}
 
-        nav {
-            background-color: #666;
-            padding: 10px 0;
-            text-align: center;
-        }
+nav {
+    background-color: #666;
+    padding: 10px 0;
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+}
 
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            padding: 0 20px;
-            display: inline-block;
-        }
+nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0 20px;
+    display: inline-block;
+}
 
-        section {
-            padding: 20px;
-            flex-grow: 1;
-            opacity: 0; /* Initially hide the section */
-            transition: opacity 1s ease-in-out; /* Fade transition */
-            margin: 0; /* Ensure no margin on sections */
-        }
+section {
+    padding: 20px;
+    flex-grow: 1;
+    opacity: 0; /* Initially hide the section */
+    transition: opacity 1s ease-in-out; /* Fade transition */
+    margin: 10px 0; /* Add margin for spacing */
+    box-sizing: border-box;
+}
 
-        footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-        }
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin: 10;
+    box-sizing: border-box;
+}
 
-        /* Order form and Feedback form styles */
-        .order-form, .feedback-form, .about-section {
-            max-width: 100%;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-        }
+/* Order form and Feedback form styles */
+.order-form, .feedback-form, .about-section {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
 
-        .order-form label, .feedback-form label, .about-section h2 {
-            display: block;
-            margin-bottom: 10px;
-        }
+.order-form label, .feedback-form label, .about-section h2 {
+    display: block;
+    margin-bottom: 10px;
+}
 
-        .order-form input[type="text"],
-        .order-form input[type="email"],
-        .order-form textarea,
-        .order-form select,
-        .order-form input[type="number"],
-        .feedback-form input[type="text"],
-        .feedback-form input[type="email"],
-        .feedback-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
+.order-form input[type="text"],
+.order-form input[type="email"],
+.order-form textarea,
+.order-form select,
+.order-form input[type="number"],
+.feedback-form input[type="text"],
+.feedback-form input[type="email"],
+.feedback-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
 
-        .order-form input[type="submit"],
-        .feedback-form input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
+.order-form input[type="submit"],
+.feedback-form input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
 
-        .order-form input[type="submit"]:hover,
-        .feedback-form input[type="submit"]:hover {
-            background-color: #45a049;
-        }
+.order-form input[type="submit"]:hover,
+.feedback-form input[type="submit"]:hover {
+    background-color: #45a049;
+}
 
-        .order-form .total {
-            margin-top: 15px;
-            font-weight: bold;
-        }
+.order-form .total {
+    margin-top: 15px;
+    font-weight: bold;
+}
 
-        .product-image {
-            max-width: 200px;
-            margin-top: 10px;
-        }
+.product-image {
+    max-width: 200px;
+    margin-top: 10px;
+}
 
-        /* Add fade-in class */
-        .fade-in {
-            opacity: 1 !important; /* Make it fully visible */
-        }
+/* Add fade-in class */
+.fade-in {
+    opacity: 1 !important; /* Make it fully visible */
+}
+/* Responsive Design for Mobile Screens */
+@media only screen and (max-width: 600px) {
+    body, section, .order-form, .feedback-form {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        padding-left: 10px; /* Add tiny space on left */
+        padding-right: 10px; /* Add tiny space on right */
+    }
 
-        /* Responsive Design for Mobile Screens */
-        @media only screen and (max-width: 600px) {
-            body, section, .order-form, .feedback-form {
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                padding-left: 10px; /* Add tiny space on left */
-            }
+    nav a {
+        display: block;
+        padding: 10px;
+        font-size: 14px; /* Make text smaller for mobile */
+    }
 
-            nav a {
-                display: block;
-                padding: 10px;
-                font-size: 14px; /* Make text smaller for mobile */
-            }
+    .order-form, .feedback-form {
+        padding: 10px;
+    }
 
-            .order-form, .feedback-form {
-                padding: 10px;
-            }
+    footer {
+        position: relative;
+    }
 
-            footer {
-                position: relative;
-            }
+    .about-section h2,
+    .about-section h3 {
+        font-size: 16px;
+    }
 
-            .about-section h2,
-            .about-section h3 {
-                font-size: 16px;
-            }
+    .about-section p, .about-section h4 {
+        font-size: 14px;
+    }
 
-            .about-section p, .about-section h4 {
-                font-size: 14px;
-            }
+    .product-image {
+        max-width: 100%;
+        height: auto;
+    }
 
-            .product-image {
-                max-width: 100%;
-                height: auto;
-            }
+    /* Remove extra space from the submit buttons */
+    .order-form input[type="submit"],
+    .feedback-form input[type="submit"] {
+        width: 100%; /* Make the buttons full-width */
+    }
 
-            /* Remove extra space from the submit buttons */
-            .order-form input[type="submit"],
-            .feedback-form input[type="submit"] {
-                width: 100%; /* Make the buttons full-width */
-            }
+    /* Adjust the input fields */
+    .order-form input[type="text"],
+    .order-form input[type="email"],
+    .order-form select,
+    .order-form input[type="number"],
+    .feedback-form input[type="text"],
+    .feedback-form input[type="email"],
+    .feedback-form textarea {
+        font-size: 16px;
+    }
+}
 
-            /* Adjust the input fields */
-            .order-form input[type="text"],
-            .order-form input[type="email"],
-            .order-form select,
-            .order-form input[type="number"],
-            .feedback-form input[type="text"],
-            .feedback-form input[type="email"],
-            .feedback-form textarea {
-                font-size: 16px;
-            }
-        }
 
-        @media only screen and (orientation: landscape) and (max-width: 600px) {
-            /* Landscape Mode Adjustment */
-            nav a {
-                font-size: 16px; /* Increase text size slightly for landscape */
-            }
+       @media only screen and (orientation: landscape) and (max-width: 600px) {
+    /* Landscape Mode Adjustment */
+    nav a {
+        font-size: 16px; /* Increase text size slightly for landscape */
+    }
 
-            .order-form, .feedback-form {
-                max-width: 95%; /* Allow more width in landscape mode */
-            }
+    .order-form, .feedback-form {
+        max-width: 95%; /* Allow more width in landscape mode */
+    }
 
-            .order-form input[type="submit"],
-            .feedback-form input[type="submit"] {
-                width: 45%; /* Adjust button width in landscape */
-                margin-right: 10px;
-                float: left;
-            }
-        }
+    .order-form input[type="submit"],
+    .feedback-form input[type="submit"] {
+        width: 45%; /* Adjust button width in landscape */
+        margin-right: 10px;
+        float: left;
+    }
+}
     </style>
     <script>
         // JavaScript for fade-in on scroll
@@ -226,7 +235,7 @@
             "chilly": "static/images/chilly.jpg",
             "tomato": "static/images/tomato.jpg",
             "spinach": "images/spinach.jpg",
-            "ladies_finger": "static/images/ladisfing.jpg",
+            "ladies_finger": "images/ladies_finger.jpg",
             "cabbage": "images/cabbage.jpg",
             "capsicum": "images/capsicum.jpg",
             "cauliflower": "images/cauliflower.jpg"
@@ -442,7 +451,7 @@ function sendEmail() {
 <!-- About Us Section -->
     <section id="about">
         <div class="about-section">
-            <h2>About Us</h2>
+            <h1>About Us</h1>
             <p>AJC Group of Company, founded in 2023 by CEO and Founder Antony Asher and COO and Co-Founder Joseph Johann, is committed to delivering high-quality farm-fresh produce directly to your doorstep. Our focus is on providing a wide variety of vegetables, fruits, and other farm products with an emphasis on freshness, sustainability, and affordability.
 
 In addition to our core offerings in farm products, AJC Group has diversified into several other sectors, including Motor Works, Paint Shop, and more, ensuring a comprehensive range of services to meet the needs of our customers.
@@ -467,8 +476,7 @@ Our mission is to make healthy and fresh food easily accessible to everyone whil
             <img src="static/images/tomatop.jpg"  width="300" height="300">
             <img src="static/images/chillyp.jpg"  width="300" height="300">
             <img src="static/images/chillyp2.jpg"  width="300" height="300">
-            <p>fresh and quality vegitable since 2023.We have banana plantation,chilly,tomato,cabbage,ladiesfinger,capsicum
-            cauliflower.<p>
+            <p>fresh and quality vegitable since 2023.<p>
 <h4> PAINT SHOP UNDER MOTOR WORKS<h4>
             <img src="static/images/paint.jpg"  width="300" height="300">
           <img src="static/images/paintworks.jpg"  width="300" height="300">
@@ -509,5 +517,6 @@ Our mission is to make healthy and fresh food easily accessible to everyone whil
     </footer>
 </body>
 </html>
+
 
 
