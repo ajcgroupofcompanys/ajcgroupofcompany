@@ -1,132 +1,204 @@
-
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+<!-- saved from url=(0022)http://127.0.0.1:5000/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AJC Group of Company</title>
     <style>
-        /* Global Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: green;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+       /* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: green;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding-left: 10px;  /* Add padding on the left */
+    padding-right: 10px; /* Add padding on the right */
+}
 
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+}
 
-        nav {
-            background-color: #666;
-            padding: 10px 0;
-            text-align: center;
-        }
+nav {
+    background-color: #666;
+    padding: 10px 0;
+    text-align: center;
+    margin: 0;
+    box-sizing: border-box;
+}
 
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            padding: 0 20px;
-        }
+nav a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0 20px;
+    display: inline-block;
+}
 
-        section {
-            padding: 20px;
-            flex-grow: 1;
-            opacity: 0; /* Initially hide the section */
-            transition: opacity 1s ease-in-out; /* Fade transition */
-        }
+section {
+    padding: 20px;
+    flex-grow: 1;
+    opacity: 0; /* Initially hide the section */
+    transition: opacity 1s ease-in-out; /* Fade transition */
+    margin: 10px 0; /* Add margin for spacing */
+    box-sizing: border-box;
+}
 
-        footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-        }
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin: 10;
+    box-sizing: border-box;
+}
 
-        /* Order form and Feedback form styles */
-        .order-form, .feedback-form, .about-section {
-            max-width: 90%;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+/* Order form and Feedback form styles */
+.order-form, .feedback-form, .about-section {
+    max-width: 100%;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
 
-        .order-form label, .feedback-form label, .about-section h2 {
-            display: block;
-            margin-bottom: 10px;
-        }
+.order-form label, .feedback-form label, .about-section h2 {
+    display: block;
+    margin-bottom: 10px;
+}
 
-        .order-form input[type="text"],
-        .order-form input[type="email"],
-        .order-form textarea,
-        .order-form select,
-        .order-form input[type="number"],
-        .feedback-form input[type="text"],
-        .feedback-form input[type="email"],
-        .feedback-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
+.order-form input[type="text"],
+.order-form input[type="email"],
+.order-form textarea,
+.order-form select,
+.order-form input[type="number"],
+.feedback-form input[type="text"],
+.feedback-form input[type="email"],
+.feedback-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
 
-        .order-form input[type="submit"],
-        .feedback-form input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            float: right;
-        }
+.order-form input[type="submit"],
+.feedback-form input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
 
-        .order-form input[type="submit"]:hover,
-        .feedback-form input[type="submit"]:hover {
-            background-color: #45a049;
-        }
+.order-form input[type="submit"]:hover,
+.feedback-form input[type="submit"]:hover {
+    background-color: #45a049;
+}
 
-        .order-form .total {
-            margin-top: 15px;
-            font-weight: bold;
-        }
+.order-form .total {
+    margin-top: 15px;
+    font-weight: bold;
+}
 
-        .product-image {
-            max-width: 200px;
-            margin-top: 10px;
-        }
+.product-image {
+    max-width: 200px;
+    margin-top: 10px;
+}
 
-        /* Add fade-in class */
-        .fade-in {
-            opacity: 1 !important; /* Make it fully visible */
-        }
+/* Add fade-in class */
+.fade-in {
+    opacity: 1 !important; /* Make it fully visible */
+}
+/* Responsive Design for Mobile Screens */
+@media only screen and (max-width: 600px) {
+    body, section, .order-form, .feedback-form {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        padding-left: 10px; /* Add tiny space on left */
+        padding-right: 10px; /* Add tiny space on right */
+    }
 
-        @media only screen and (max-width: 600px) {
-            nav a {
-                display: block;
-                padding: 10px;
-            }
+    nav a {
+        display: block;
+        padding: 10px;
+        font-size: 14px; /* Make text smaller for mobile */
+    }
 
-            .order-form, .feedback-form {
-                max-width: 100%;
-            }
+    .order-form, .feedback-form {
+        padding: 10px;
+    }
 
-            footer {
-                position: relative;
-            }
-        }
+    footer {
+        position: relative;
+    }
+
+    .about-section h2,
+    .about-section h3 {
+        font-size: 16px;
+    }
+
+    .about-section p, .about-section h4 {
+        font-size: 14px;
+    }
+
+    .product-image {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Remove extra space from the submit buttons */
+    .order-form input[type="submit"],
+    .feedback-form input[type="submit"] {
+        width: 100%; /* Make the buttons full-width */
+    }
+
+    /* Adjust the input fields */
+    .order-form input[type="text"],
+    .order-form input[type="email"],
+    .order-form select,
+    .order-form input[type="number"],
+    .feedback-form input[type="text"],
+    .feedback-form input[type="email"],
+    .feedback-form textarea {
+        font-size: 16px;
+    }
+}
+
+
+       @media only screen and (orientation: landscape) and (max-width: 600px) {
+    /* Landscape Mode Adjustment */
+    nav a {
+        font-size: 16px; /* Increase text size slightly for landscape */
+    }
+
+    .order-form, .feedback-form {
+        max-width: 95%; /* Allow more width in landscape mode */
+    }
+
+    .order-form input[type="submit"],
+    .feedback-form input[type="submit"] {
+        width: 45%; /* Adjust button width in landscape */
+        margin-right: 10px;
+        float: left;
+    }
+}
     </style>
     <script>
         // JavaScript for fade-in on scroll
@@ -150,18 +222,18 @@
         window.onload = fadeInOnScroll;
 
         let prices = {
-            "chilly": 10,
-            "tomato": 20,
-            "spinach": 10,
-            "ladies_finger": 2,
-            "cabbage": 30,
-            "capsicum": 10,
-            "cauliflower": 30
+            "chilly": "10 ",
+            "tomato": "2 ",
+            "spinach": "10 ",
+            "ladies_finger": "2 ",
+            "cabbage": "30 ",
+            "capsicum": "10 ",
+            "cauliflower": "30 "
         };
 
         let productImages = {
-            "chilly": "/chilly.jpg",
-            "tomato": "/static/images/tomato.jpg",
+            "chilly": "static/images/chilly.jpg",
+            "tomato": "static/images/tomato.jpg",
             "spinach": "images/spinach.jpg",
             "ladies_finger": "images/ladies_finger.jpg",
             "cabbage": "images/cabbage.jpg",
@@ -220,26 +292,33 @@
         }
 
         // Function to send email for the order
-        function sendEmail() {
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
+function sendEmail() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
 
-            let body = "Name: " + name + "\nEmail: " + email + "\n";
+    let body = "Name: " + name + "\nEmail: " + email + "\n";
 
-            const itemCount = document.getElementById("itemCount").value;
-            for (let i = 1; i <= itemCount; i++) {
-                const product = document.getElementById("product" + i).value;
-                const quantity = document.getElementById("quantity" + i).value;
-                if (product && quantity) {
-                    const total = prices[product] * quantity;
-                    body += "\nProduct " + i + ": " + product + "\nQuantity: " + quantity + "\nTotal Cost: Rs " + total + "\n";
-                }
-            }
+    const itemCount = document.getElementById("itemCount").value;
+    let totalAmount = 0; // Initialize the total amount
 
-            const subject = "Order from " + name;
-            const mailtoLink = "mailto:ajcgroupofcompany41@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-            window.location.href = mailtoLink;
+    for (let i = 1; i <= itemCount; i++) {
+        const product = document.getElementById("product" + i).value;
+        const quantity = document.getElementById("quantity" + i).value;
+        if (product && quantity) {
+            const total = prices[product] * quantity;
+            body += "\nProduct " + i + ": " + product + "\nQuantity: " + quantity + "\nTotal Cost: Rs " + total + "\n";
+            totalAmount += total; // Add to the total amount
         }
+    }
+
+    // Add the net amount (total amount) to the email
+    body += "\nNet Amount: Rs " + totalAmount;
+
+    const subject = "Order from " + name;
+    const mailtoLink = "mailto:ajcgroupofcompany41@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    window.location.href = mailtoLink;
+}
+
 
         // Function to send email for the feedback
         function sendFeedbackEmail() {
@@ -277,30 +356,28 @@
         <h1>AJC Group of Company</h1>
     </header>
     <nav>
-        <a href="#home">Home</a>
-        <a href="#order">Order</a>
-        <a href="#about">About Us</a>
-        <a href="#feedback">Feedback</a>
+        <a href="http://127.0.0.1:5000/#home">Home</a>
+        <a href="http://127.0.0.1:5000/#order">Order</a>
+        <a href="http://127.0.0.1:5000/#about">About Us</a>
+        <a href="http://127.0.0.1:5000/#feedback">Feedback</a>
     </nav>
 
-    <section id="home">
+    <section id="home" class="fade-in">
         <h2>Welcome to AJC Group of Company</h2>
-        <p>Welcome to AJC Group of Company, where we bring fresh farm products directly to your doorstep. Founded in 2023 by Antony Asher and Joseph Johann, we are committed to delivering high-quality, sustainable, and affordable produce. Whether you're looking for fresh vegetables, fruits, or services from our diverse sectors like Motor Works and Paint Shop, we’re here to meet your needs. Join us on our journey to provide the best for you and your family!
-
-</p>
+        <p>Welcome to AJC Group of Company, where we bring fresh farm products directly to your doorstep. Founded in 2023 by Antony Asher and Joseph Johann, we are committed to delivering high-quality, sustainable, and affordable produce. Whether you're looking for fresh vegetables, fruits, or services from our diverse sectors like Motor Works and Paint Shop, we’re here to meet your needs. Join us on our journey to provide the best for you and your family!</p>
     </section>
 
     <!-- Order Section -->
-    <section id="order">
+    <section id="order" class="fade-in">
         <h2>Order</h2>
         <div class="order-form">
             <h3>Place Your Order</h3>
             <form onsubmit="sendEmail(); return false;">
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required="">
 
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required="">
 
                 <label for="itemCount">How many items do you need?</label>
                 <select id="itemCount" name="itemCount" onchange="showProductFields()">
@@ -312,111 +389,116 @@
                 </select>
 
                 <!-- Product Fields -->
-                <fieldset id="productFieldset1">
-                    <label for="product1">Select Product 1:</label>
-                    <select id="product1" name="product1" required onchange="updateProductImage(1)">
-                    </select>
-                    <img id="productImage1" class="product-image" style="display:none" alt="Product Image">
+                <div id="productFieldset1" class="product-fieldset" style="display: block;">
+                    <label for="product1">Product 1:</label>
+                    <select id="product1" name="product1" onchange="updateProductImage(1)"><option value="">Select Product</option><option value="chilly">chilly (10  Rs)</option><option value="tomato">tomato (2  Rs)</option><option value="spinach">spinach (10  Rs)</option><option value="ladies_finger">ladies finger (2  Rs)</option><option value="cabbage">cabbage (30  Rs)</option><option value="capsicum">capsicum (10  Rs)</option><option value="cauliflower">cauliflower (30  Rs)</option></select>
                     <label for="quantity1">Quantity:</label>
-                    <input type="number" id="quantity1" name="quantity1" min="1" required oninput="calculateTotal()">
-                </fieldset>
+                    <input type="number" id="quantity1" name="quantity1" min="1" onchange="calculateTotal()">
+                    <img id="productImage1" class="product-image" style="display:none;">
+                </div>
 
-                <fieldset id="productFieldset2" class="hidden">
-                    <label for="product2">Select Product 2:</label>
-                    <select id="product2" name="product2" onchange="updateProductImage(2)">
-                    </select>
-                    <img id="productImage2" class="product-image" style="display:none" alt="Product Image">
+                <div id="productFieldset2" class="product-fieldset" style="display: none;">
+                    <label for="product2">Product 2:</label>
+                    <select id="product2" name="product2" onchange="updateProductImage(2)"><option value="">Select Product</option><option value="chilly">chilly (10  Rs)</option><option value="tomato">tomato (2  Rs)</option><option value="spinach">spinach (10  Rs)</option><option value="ladies_finger">ladies finger (2  Rs)</option><option value="cabbage">cabbage (30  Rs)</option><option value="capsicum">capsicum (10  Rs)</option><option value="cauliflower">cauliflower (30  Rs)</option></select>
                     <label for="quantity2">Quantity:</label>
-                    <input type="number" id="quantity2" name="quantity2" min="1" oninput="calculateTotal()">
-                </fieldset>
+                    <input type="number" id="quantity2" name="quantity2" min="1" onchange="calculateTotal()">
+                    <img id="productImage2" class="product-image" style="display:none;">
+                </div>
 
-                <fieldset id="productFieldset3" class="hidden">
-                    <label for="product3">Select Product 3:</label>
-                    <select id="product3" name="product3" onchange="updateProductImage(3)">
-                    </select>
-                    <img id="productImage3" class="product-image" style="display:none" alt="Product Image">
+                <div id="productFieldset3" class="product-fieldset" style="display: none;">
+                    <label for="product3">Product 3:</label>
+                    <select id="product3" name="product3" onchange="updateProductImage(3)"><option value="">Select Product</option><option value="chilly">chilly (10  Rs)</option><option value="tomato">tomato (2  Rs)</option><option value="spinach">spinach (10  Rs)</option><option value="ladies_finger">ladies finger (2  Rs)</option><option value="cabbage">cabbage (30  Rs)</option><option value="capsicum">capsicum (10  Rs)</option><option value="cauliflower">cauliflower (30  Rs)</option></select>
                     <label for="quantity3">Quantity:</label>
-                    <input type="number" id="quantity3" name="quantity3" min="1" oninput="calculateTotal()">
-                </fieldset>
+                    <input type="number" id="quantity3" name="quantity3" min="1" onchange="calculateTotal()">
+                    <img id="productImage3" class="product-image" style="display:none;">
+                </div>
 
-                <fieldset id="productFieldset4" class="hidden">
-                    <label for="product4">Select Product 4:</label>
-                    <select id="product4" name="product4" onchange="updateProductImage(4)">
-                    </select>
-                    <img id="productImage4" class="product-image" style="display:none" alt="Product Image">
+                <div id="productFieldset4" class="product-fieldset" style="display: none;">
+                    <label for="product4">Product 4:</label>
+                    <select id="product4" name="product4" onchange="updateProductImage(4)"><option value="">Select Product</option><option value="chilly">chilly (10  Rs)</option><option value="tomato">tomato (2  Rs)</option><option value="spinach">spinach (10  Rs)</option><option value="ladies_finger">ladies finger (2  Rs)</option><option value="cabbage">cabbage (30  Rs)</option><option value="capsicum">capsicum (10  Rs)</option><option value="cauliflower">cauliflower (30  Rs)</option></select>
                     <label for="quantity4">Quantity:</label>
-                    <input type="number" id="quantity4" name="quantity4" min="1" oninput="calculateTotal()">
-                </fieldset>
+                    <input type="number" id="quantity4" name="quantity4" min="1" onchange="calculateTotal()">
+                    <img id="productImage4" class="product-image" style="display:none;">
+                </div>
 
-                <fieldset id="productFieldset5" class="hidden">
-                    <label for="product5">Select Product 5:</label>
-                    <select id="product5" name="product5" onchange="updateProductImage(5)">
-                    </select>
-                    <img id="productImage5" class="product-image" style="display:none" alt="Product Image">
+                <div id="productFieldset5" class="product-fieldset" style="display: none;">
+                    <label for="product5">Product 5:</label>
+                    <select id="product5" name="product5" onchange="updateProductImage(5)"><option value="">Select Product</option><option value="chilly">chilly (10  Rs)</option><option value="tomato">tomato (2  Rs)</option><option value="spinach">spinach (10  Rs)</option><option value="ladies_finger">ladies finger (2  Rs)</option><option value="cabbage">cabbage (30  Rs)</option><option value="capsicum">capsicum (10  Rs)</option><option value="cauliflower">cauliflower (30  Rs)</option></select>
                     <label for="quantity5">Quantity:</label>
-                    <input type="number" id="quantity5" name="quantity5" min="1" oninput="calculateTotal()">
-                </fieldset>
+                    <input type="number" id="quantity5" name="quantity5" min="1" onchange="calculateTotal()">
+                    <img id="productImage5" class="product-image" style="display:none;">
+                </div>
 
-                <div id="totalCost" class="total">Total Cost: Rs 0</div>
+                <div class="total">
+                    <span id="totalCost">Total Cost: Rs 0</span>
+                </div>
+
                 <input type="submit" value="Submit Order">
             </form>
         </div>
     </section>
 
-    <!-- About Us Section -->
-    <section id="about">
-        <div class="about-section">
-            <h2>About Us</h2>
+<!-- About Us Section -->
+    <section id="about" class="fade-in">
+        <div class="about-section" style="
+    padding-left: 20px;
+    padding-right: 20px;
+">
+            <h1>About Us</h1>
             <p>AJC Group of Company, founded in 2023 by CEO and Founder Antony Asher and COO and Co-Founder Joseph Johann, is committed to delivering high-quality farm-fresh produce directly to your doorstep. Our focus is on providing a wide variety of vegetables, fruits, and other farm products with an emphasis on freshness, sustainability, and affordability.
 
 In addition to our core offerings in farm products, AJC Group has diversified into several other sectors, including Motor Works, Paint Shop, and more, ensuring a comprehensive range of services to meet the needs of our customers.
 
-Our mission is to make healthy and fresh food easily accessible to everyone while supporting local farmers and communities, and we are constantly expanding to offer the best products and services across multiple industries.<p>
-    <h2>OUR TEAM<h2>
-     <h2>___________________________________________</h2>
-            <H3>CEO[CHEIF EXICUTIVE OFFICER]</H3>
-            <h4>Mr Antony Asher [FOUNDER OF COMPANY] <h4>
-            <H3>COO[CHEIF OPERATIONS OFFICER]<H3>
-            <h4>Mr Joseph Johann [CO-FOUNDER]<h4>
-    <h2>____________________________________________</h2>
-    <H2>OUR SECTORS
-        <h4> MOTOR WORKS<h4>
-            <img src="/static/images/bodywork.jpg"  width="300" height="200">
-          <img src="/static/images/amw.jpg"  width="300" height="200">
-            <img src="/static/images/chase.jpg"  width="300" height="200">
-            <h4>Made with pressision and good engineering and named for durability<h4>
-        <h4> FARM<h4>
-            <img src="/static/images/ajc.jpg"  width="300" height="300">
-            <h4>fresh and quality vegitable since 2023.<h4>
-<h4> PAINT SHOP UNDER MOTOR WORKS<h4>
-            <img src="/static/images/paint.jpg"  width="300" height="300">
-          <img src="/static/images/paintworks.jpg"  width="300" height="300">
-            <h4>ensuring quality painting.<h4>
-  <h2>OUR AIM<h2>
-      <h4>our aim is to ensure good and quality vegetables from our farm to ensure nuture healthy generation<h4>
+Our mission is to make healthy and fresh food easily accessible to everyone while supporting local farmers and communities, and we are constantly expanding to offer the best products and services across multiple industries.</p><p>
+    </p><h2>OUR TEAM</h2><h2>
+     </h2><h2></h2><h2>
+            </h2><h3>CEO[CHEIF EXICUTIVE OFFICER]</h3>
+            <h4>Mr Antony Asher [FOUNDER OF COMPANY] </h4><h4>
+            </h4><h3>COO[CHEIF OPERATIONS OFFICER]</h3><h3>
+            </h3><h4>Mr Joseph Johann [CO-FOUNDER]</h4><h4>
+    </h4><h2></h2>
+    <h2>OUR SECTORS
+        </h2><h4> MOTOR WORKS</h4><h4>
+            <img src="./AJC Group of Company_files/bodywork.jpg" width="300" height="200">
+          <img src="./AJC Group of Company_files/amw.jpg" width="300" height="200">
+            <img src="./AJC Group of Company_files/chase.jpg" width="300" height="200">
+            </h4><h4>Made with pressision and good engineering and named for durability</h4><h4>
+        </h4><h4> FARM</h4><h4>
+            <img src="./AJC Group of Company_files/ajc.jpg" width="300" height="300">
+            <img src="./AJC Group of Company_files/banana.jpg" width="300" height="300">
+            <img src="./AJC Group of Company_files/tomatop.jpg" width="300" height="300">
+            <img src="./AJC Group of Company_files/chillyp.jpg" width="300" height="300">
+            <img src="./AJC Group of Company_files/chillyp2.jpg" width="300" height="300">
+            <p>fresh and quality vegitable since 2023.</p><p>
+</p></h4><h4> PAINT SHOP UNDER MOTOR WORKS</h4><h4>
+            <img src="./AJC Group of Company_files/paint.jpg" width="300" height="300">
+          <img src="./AJC Group of Company_files/paintworks.jpg" width="300" height="300">
+            </h4><h4>ensuring quality painting.</h4><h4>
+  </h4><h2 style="padding-left: 20px;padding-right: 20px;">OUR AIM</h2><h2>
+      </h2><h4>our aim is to ensure good and quality vegetables from our farm to ensure nuture healthy generation</h4><h4>
+          </h4><h4>We are also planing to build green house in 2025.</h4>
+          <h2>CONTACT US</h2><h2>
+              </h2><h4>Mob:9745607925</h4><h4>
+              </h4><h4>Gmail:ajcgroupofcompany047@gmail.com</h4><h4>
 
-          <h2>CONTACT US<h2>
-              <h4>Mob:9745607925<h4>
-              <h4>Gmail:ajcgroupofcompany047@gmail.com<h4>
-
-    </section>
-
-    <!-- Feedback Section -->
-    <section id="feedback">
+   <!-- Feedback Section -->
+    <section id="feedback" class="fade-in">
+        <h2>Feedback</h2>
         <div class="feedback-form">
-            <h3>Feedback</h3>
             <form onsubmit="sendFeedbackEmail(); return false;">
                 <label for="feedbackName">Your Name:</label>
-                <input type="text" id="feedbackName" name="feedbackName" required>
+                <input type="text" id="feedbackName" name="feedbackName" required="">
 
                 <label for="feedbackEmail">Your Email:</label>
-                <input type="email" id="feedbackEmail" name="feedbackEmail" required>
+                <input type="email" id="feedbackEmail" name="feedbackEmail" required="">
+
+                 <label for="senderGmail">Your Gmail:</label>
+                <input type="text" id="senderGmail" name="senderGmail" required="">
 
                 <label for="feedbackMessage">Your Feedback:</label>
-                <textarea id="feedbackMessage" name="feedbackMessage" required></textarea>
+                <textarea id="feedbackMessage" name="feedbackMessage" rows="5" required=""></textarea>
 
-                <label for="senderGmail">Your Gmail:</label>
-                <input type="email" id="senderGmail" name="senderGmail" required>
+
 
                 <input type="submit" value="Submit Feedback">
             </form>
@@ -424,7 +506,13 @@ Our mission is to make healthy and fresh food easily accessible to everyone whil
     </section>
 
     <footer>
-        <p>&copy; 2023 AJC Group of Company. All Rights Reserved.</p>
+        <p>© 2025 AJC Group of Company. All rights reserved.</p>
     </footer>
+
+
+
+</h4>
+        </div>
+    </section>
 </body>
 </html>
