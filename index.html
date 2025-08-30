@@ -214,6 +214,11 @@
             background-color: #d32f2f;
         }
 
+        .admin-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
         .price-edit {
             margin: 10px 0;
             padding: 10px;
@@ -266,6 +271,46 @@
             padding: 15px;
             background-color: #e8f5e8;
             border-radius: 5px;
+        }
+
+        .status-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .status-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Responsive Design for Mobile Screens */
@@ -359,6 +404,13 @@
         window.addEventListener("scroll", fadeInOnScroll);
         window.onload = fadeInOnScroll;
 
+        // Configuration - Update these values as needed
+        const CONFIG = {
+            // Set your backend API URL here
+            API_BASE_URL: 'https://your-backend-domain.com', // Replace with your actual backend URL
+            // API_BASE_URL: 'http://localhost:3000', // For local development
+        };
+
         // EDIT PRICES HERE - Change these values to update prices across all devices
         let prices = {
             "chilly": 10,        // Price per 5g
@@ -384,14 +436,6 @@
         };
 
         let isAdminLoggedIn = false;
-
-        // GitHub integration settings - CONFIGURE THESE FOR AUTO-UPDATE
-        const GITHUB_CONFIG = {
-            username: 'ajcgroupofcompanys', // Replace with your GitHub username
-            repository: 'ajcgroupofcompany', // Replace with your repository name
-            token: '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', // Replace with your GitHub personal access token
-            filename: 'index.html' // Name of your HTML file
-        };
 
         function updateProductList() {
             for (let i = 1; i <= 5; i++) {
@@ -605,8 +649,12 @@
             }
 
             html += `
-                <button class="admin-btn" onclick="savePrices()">Save Prices</button>
-                <div id="githubStatus" style="margin-top: 15px;"></div>
+                <label for="adminSecret" style="display: block; margin-top: 15px; font-weight: bold;">Admin Secret Key:</label>
+                <input type="password" id="adminSecret" placeholder="Enter admin secret for GitHub updates" style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
+                
+                <button class="admin-btn" id="savePricesBtn" onclick="savePrices()">Update Prices & Push to GitHub</button>
+                <div id="updateStatus" style="margin-top: 15px;"></div>
+
                 <div class="password-change">
                     <h3>Change Admin Password</h3>
                     <input type="password" id="currentPassword" placeholder="Current Password" />
@@ -616,197 +664,115 @@
                     <p id="passwordError" style="color: red; display: none;"></p>
                     <p id="passwordSuccess" style="color: green; display: none;"></p>
                 </div>
+                
                 <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
-                    <h4 style="color: #333; margin-top: 0;">GitHub Auto-Update Setup:</h4>
-                    <p style="font-size: 12px; color: #666; margin: 5px 0;">To enable automatic updates:</p>
-                    <ol style="font-size: 12px; color: #666; margin: 5px 0; padding-left: 20px;">
-                        <li>Create a Personal Access Token at GitHub Settings → Developer Settings → Personal Access Tokens → Tokens (classic)</li>
-                        <li>Select "repo" permissions for the token</li>
-                        <li>Replace the empty GITHUB_CONFIG values in the code with your details</li>
-                        <li>Your repository must be public or token must have appropriate permissions</li>
-                    </ol>
-                    <p style="font-size: 11px; color: #999; margin: 5px 0;">Current config: ${GITHUB_CONFIG.username ? 'Configured' : 'Not configured'}</p>
+                    <h4 style="color: #333; margin-top: 0;">Backend API Status:</h4>
+                    <p style="font-size: 12px; color: #666; margin: 5px 0;">
+                        API URL: <code>${CONFIG.API_BASE_URL}</code>
+                    </p>
+                    <button class="admin-btn" onclick="testBackendConnection()" style="padding: 5px 10px; font-size: 12px;">Test Connection</button>
+                    <div id="connectionStatus" style="margin-top: 10px;"></div>
                 </div>
             `;
 
             adminContent.innerHTML = html;
         }
 
-        function savePrices() {
-            // Update prices from form
+        async function testBackendConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connection...';
+            
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = '<div class="status-box status-success">✅ Backend connection successful!</div>';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status-box status-error">❌ Backend connection failed: ${error.message}</div>`;
+            }
+        }
+
+        async function savePrices() {
+            const adminSecret = document.getElementById('adminSecret').value.trim();
+            const savePricesBtn = document.getElementById('savePricesBtn');
+            const statusDiv = document.getElementById('updateStatus');
+
+            if (!adminSecret) {
+                statusDiv.innerHTML = '<div class="status-box status-error">Please enter the admin secret key.</div>';
+                return;
+            }
+
+            // Update prices in memory first
             for (let item in prices) {
                 const newPrice = parseFloat(document.getElementById(`price_${item}`).value);
                 if (!isNaN(newPrice) && newPrice >= 0) {
                     prices[item] = newPrice;
                 }
             }
-            
-            // Update displays immediately
+
+            // Update local displays immediately
             updateProductList();
             updatePriceList();
             calculateTotal();
-            
-            // Check if GitHub is configured
-            if (GITHUB_CONFIG.username && GITHUB_CONFIG.repository && GITHUB_CONFIG.token && 
-                GITHUB_CONFIG.username !== 'ajcgroupofcompanys' && GITHUB_CONFIG.token !== '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') {
-                updateGitHubFile();
-            } else {
-                document.getElementById('githubStatus').innerHTML = '<p style="color: orange;">⚠️ GitHub auto-update not configured. Please set up GITHUB_CONFIG or use manual method below.</p>';
-                showSourceCodeUpdate();
-                alert('Prices updated locally!\n\nTo enable automatic GitHub updates, configure GITHUB_CONFIG in the code.\n\nFor now, use the manual method below.');
-            }
-        }
 
-        async function updateGitHubFile() {
+            // Disable button and show loading
+            savePricesBtn.disabled = true;
+            savePricesBtn.innerHTML = '<div class="loading-spinner"></div>Updating GitHub...';
+            statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Updating prices in GitHub repository...</div>';
+
             try {
-                document.getElementById('githubStatus').innerHTML = '<p style="color: blue;">🔄 Updating GitHub repository...</p>';
-                
-                // Get current file content
-                const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/contents/${GITHUB_CONFIG.filename}`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/update-prices`, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_CONFIG.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'User-Agent': 'AJC-Price-Updater'
-                    }
-                });
-                
-                if (!getResponse.ok) {
-                    const errorData = await getResponse.json();
-                    throw new Error(`Failed to fetch file: ${errorData.message}`);
-                }
-                
-                const fileData = await getResponse.json();
-                let currentContent;
-                
-                try {
-                    currentContent = atob(fileData.content.replace(/\s/g, ''));
-                } catch (e) {
-                    throw new Error('Failed to decode file content');
-                }
-                
-                // Update the prices in the content
-                const updatedContent = updatePricesInContent(currentContent);
-                
-                if (updatedContent === currentContent) {
-                    document.getElementById('githubStatus').innerHTML = '<p style="color: blue;">ℹ️ No changes detected in prices</p>';
-                    return;
-                }
-                
-                // Commit the updated file
-                const updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/contents/${GITHUB_CONFIG.filename}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${GITHUB_CONFIG.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json',
-                        'User-Agent': 'AJC-Price-Updater'
                     },
                     body: JSON.stringify({
-                        message: `Update prices - ${new Date().toLocaleString()}`,
-                        content: btoa(unescape(encodeURIComponent(updatedContent))),
-                        sha: fileData.sha
+                        prices: prices,
+                        adminSecret: adminSecret
                     })
                 });
-                
-                if (updateResponse.ok) {
-                    document.getElementById('githubStatus').innerHTML = '<p style="color: green;">✅ GitHub updated successfully! Changes will be live within a few minutes.</p>';
-                    alert('Prices updated successfully!\n\nChanges have been pushed to GitHub and will be live shortly.');
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="status-box status-success">
+                            ✅ Success! Prices updated in GitHub repository.
+                            <br>
+                            <small>Changes will be live on all devices within a few minutes.</small>
+                            ${result.commit ? `<br><a href="${result.commit}" target="_blank">View Commit</a>` : ''}
+                        </div>
+                    `;
                 } else {
-                    const errorData = await updateResponse.json();
-                    throw new Error(errorData.message || 'Failed to update file');
+                    statusDiv.innerHTML = `
+                        <div class="status-box status-error">
+                            ❌ Failed to update GitHub: ${result.error}
+                            <br>
+                            <small>${result.details || 'Please check your admin secret and try again.'}</small>
+                        </div>
+                    `;
                 }
-                
+
             } catch (error) {
-                console.error('GitHub update failed:', error);
-                document.getElementById('githubStatus').innerHTML = `<p style="color: red;">❌ GitHub update failed: ${error.message}</p>`;
-                showSourceCodeUpdate();
-                alert(`Automatic GitHub update failed: ${error.message}\n\nPlease use the manual method shown below or check your GitHub configuration.`);
+                console.error('Error updating prices:', error);
+                statusDiv.innerHTML = `
+                    <div class="status-box status-error">
+                        ❌ Connection error: ${error.message}
+                        <br>
+                        <small>Please check if the backend server is running.</small>
+                    </div>
+                `;
+            } finally {
+                // Re-enable button
+                savePricesBtn.disabled = false;
+                savePricesBtn.innerHTML = 'Update Prices & Push to GitHub';
+                
+                // Clear admin secret for security
+                document.getElementById('adminSecret').value = '';
             }
-        }
-
-        function updatePricesInContent(content) {
-            const newPricesString = `        let prices = {
-            "chilly": ${prices.chilly},        // Price per 5g
-            "tomato": ${prices.tomato},         // Price per piece
-            "spinach": ${prices.spinach},       // Price per piece
-            "ladies_finger": ${prices.ladies_finger},  // Price per piece
-            "cabbage": ${prices.cabbage},       // Price per piece
-            "capsicum": ${prices.capsicum},      // Price per piece
-            "cauliflower": ${prices.cauliflower}    // Price per piece
-        };`;
-            
-            // More robust regex to match the prices object
-            const pricesRegex = /let prices = \{[\s\S]*?\n        \};/;
-            
-            if (pricesRegex.test(content)) {
-                return content.replace(pricesRegex, newPricesString);
-            } else {
-                // Fallback regex for different formatting
-                const fallbackRegex = /let prices = \{[^}]*\};/;
-                return content.replace(fallbackRegex, newPricesString.replace(/\s+/g, ' ').trim());
-            }
-        }
-
-        function showSourceCodeUpdate() {
-            const sourceCode = `        let prices = {
-            "chilly": ${prices.chilly},        // Price per 5g
-            "tomato": ${prices.tomato},         // Price per piece
-            "spinach": ${prices.spinach},       // Price per piece
-            "ladies_finger": ${prices.ladies_finger},  // Price per piece
-            "cabbage": ${prices.cabbage},       // Price per piece
-            "capsicum": ${prices.capsicum},      // Price per piece
-            "cauliflower": ${prices.cauliflower}    // Price per piece
-        };`;
-
-            const adminContent = document.getElementById('adminContent');
-            const existingCode = document.getElementById('sourceCodeDisplay');
-            
-            if (existingCode) {
-                existingCode.remove();
-            }
-            
-            const codeDiv = document.createElement('div');
-            codeDiv.id = 'sourceCodeDisplay';
-            codeDiv.innerHTML = `
-                <div style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px; border-left: 4px solid #4CAF50;">
-                    <h3 style="color: #333; margin-top: 0;">Manual Update Method:</h3>
-                    <textarea readonly style="width: 100%; height: 120px; font-family: monospace; font-size: 12px; padding: 10px; background-color: #fff; border: 1px solid #ddd; border-radius: 3px;">${sourceCode}</textarea>
-                    <button class="admin-btn" onclick="copySourceCode()" style="margin-top: 10px;">Copy Code</button>
-                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                        1. Copy the code above<br>
-                        2. Go to your GitHub repository<br>
-                        3. Edit your HTML file<br>
-                        4. Find and replace the prices section with the copied code<br>
-                        5. Commit the changes
-                    </p>
-                </div>
-            `;
-            
-            adminContent.appendChild(codeDiv);
-        }
-
-        function copySourceCode() {
-            const sourceCode = `        let prices = {
-            "chilly": ${prices.chilly},        // Price per 5g
-            "tomato": ${prices.tomato},         // Price per piece
-            "spinach": ${prices.spinach},       // Price per piece
-            "ladies_finger": ${prices.ladies_finger},  // Price per piece
-            "cabbage": ${prices.cabbage},       // Price per piece
-            "capsicum": ${prices.capsicum},      // Price per piece
-            "cauliflower": ${prices.cauliflower}    // Price per piece
-        };`;
-
-            navigator.clipboard.writeText(sourceCode).then(() => {
-                alert('Source code copied to clipboard!');
-            }).catch(() => {
-                const textArea = document.createElement('textarea');
-                textArea.value = sourceCode;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('Source code copied!');
-            });
         }
 
         function changePassword() {
@@ -817,6 +783,7 @@
             const errorElement = document.getElementById('passwordError');
             const successElement = document.getElementById('passwordSuccess');
             
+            // Hide previous messages
             errorElement.style.display = 'none';
             successElement.style.display = 'none';
             
@@ -838,11 +805,13 @@
                 return;
             }
             
+            // Update password
             adminPassword = newPassword;
             
-            successElement.textContent = 'Password changed successfully!';
+            successElement.textContent = 'Password changed successfully! Remember to update it in your GitHub code too.';
             successElement.style.display = 'block';
             
+            // Clear form
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
@@ -1031,5 +1000,4 @@
 
 </body>
 </html>
-
 
