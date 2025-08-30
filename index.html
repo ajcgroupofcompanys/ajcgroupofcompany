@@ -648,7 +648,7 @@
             
             // Check if GitHub is configured
             if (GITHUB_CONFIG.username && GITHUB_CONFIG.repository && GITHUB_CONFIG.token && 
-                GITHUB_CONFIG.username !== '' && GITHUB_CONFIG.token !== '') {
+                GITHUB_CONFIG.username !== 'ajcgroupofcompanys' && GITHUB_CONFIG.token !== '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') {
                 updateGitHubFile();
             } else {
                 document.getElementById('githubStatus').innerHTML = '<p style="color: orange;">⚠️ GitHub auto-update not configured. Please set up GITHUB_CONFIG or use manual method below.</p>';
@@ -1031,4 +1031,5 @@
 
 </body>
 </html>
+
 
