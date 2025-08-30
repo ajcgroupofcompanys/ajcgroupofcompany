@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AJC Group of Company</title>
     <style>
+        /* Your existing CSS styles remain unchanged */
         /* Global Styles */
         body {
             font-family: Arial, sans-serif;
@@ -400,6 +401,7 @@
                         const option = document.createElement("option");
                         option.value = item;
                         option.text = item.replace(/_/g, ' ') + " (" + prices[item] + " Rs)";
+                        option.setAttribute('data-price', prices[item]);
                         productSelect.appendChild(option);
                     }
                 }
@@ -629,7 +631,7 @@
         const GITHUB_CONFIG = {
             username: 'ajcgroupofcompanys', // Your GitHub username
             repository: 'ajcgroupofcompany', // Your repository name
-            token: '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', // Your GitHub personal access token
+            token: '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', // Your GitHub personal access token
             filename: 'index.html' // Name of your HTML file
         };
 
@@ -647,7 +649,9 @@
             calculateTotal();
             
             // Try to auto-update GitHub if configured
-            if (GITHUB_CONFIG.username && GITHUB_CONFIG.repository && GITHUB_CONFIG.token) {
+            if (GITHUB_CONFIG.username && GITHUB_CONFIG.repository && GITHUB_CONFIG.token && 
+                GITHUB_CONFIG.username !== 'your-github-username' && 
+                GITHUB_CONFIG.token !== 'your-github-token-here') {
                 updateGitHubFile();
             } else {
                 // Fallback to manual copy-paste method
@@ -674,7 +678,7 @@
                 }
                 
                 const fileData = await getResponse.json();
-                const currentContent = atob(fileData.content);
+                const currentContent = atob(fileData.content.replace(/\n/g, ''));
                 
                 // Update the prices in the content
                 const updatedContent = updatePricesInContent(currentContent);
@@ -689,7 +693,7 @@
                     },
                     body: JSON.stringify({
                         message: `Update prices - ${new Date().toLocaleString()}`,
-                        content: btoa(updatedContent),
+                        content: btoa(unescape(encodeURIComponent(updatedContent))),
                         sha: fileData.sha
                     })
                 });
@@ -698,43 +702,44 @@
                     document.getElementById('githubStatus').innerHTML = '<p style="color: green;">✅ GitHub updated successfully! Changes will appear on all devices within a few minutes.</p>';
                     alert('Prices updated successfully!\n\nChanges have been pushed to GitHub and will be live on all devices shortly.');
                 } else {
-                    throw new Error('Failed to update GitHub file');
+                    const errorData = await updateResponse.json();
+                    throw new Error(errorData.message || 'Failed to update GitHub file');
                 }
                 
             } catch (error) {
                 console.error('GitHub update failed:', error);
-                document.getElementById('githubStatus').innerHTML = '<p style="color: red;">❌ GitHub update failed. Using manual method below.</p>';
+                document.getElementById('githubStatus').innerHTML = `<p style="color: red;">❌ GitHub update failed: ${error.message}. Using manual method below.</p>`;
                 showSourceCodeUpdate();
                 alert('Automatic GitHub update failed.\n\nPlease use the manual copy-paste method shown below.');
             }
         }
 
         function updatePricesInContent(content) {
-            // Create the new prices object string
-            const newPricesString = `let prices = {
-            "chilly": ${prices.chilly},
-            "tomato": ${prices.tomato},
-            "spinach": ${prices.spinach},
-            "ladies_finger": ${prices.ladies_finger},
-            "cabbage": ${prices.cabbage},
-            "capsicum": ${prices.capsicum},
-            "cauliflower": ${prices.cauliflower}
+            // Create the new prices object string with proper formatting
+            const newPricesString = `        let prices = {
+            "chilly": ${prices.chilly},        // Price per 5g
+            "tomato": ${prices.tomato},         // Price per piece
+            "spinach": ${prices.spinach},       // Price per piece
+            "ladies_finger": ${prices.ladies_finger},  // Price per piece
+            "cabbage": ${prices.cabbage},       // Price per piece
+            "capsicum": ${prices.capsicum},      // Price per piece
+            "cauliflower": ${prices.cauliflower}    // Price per piece
         };`;
             
-            // Replace the existing prices object
-            const pricesRegex = /let prices = \{[^}]*\};/s;
+            // Replace the existing prices object using a more specific regex
+            const pricesRegex = /let prices = \{[\s\S]*?\};/;
             return content.replace(pricesRegex, newPricesString);
         }
 
         function showSourceCodeUpdate() {
-            const sourceCode = `let prices = {
-            "chilly": ${prices.chilly},
-            "tomato": ${prices.tomato},
-            "spinach": ${prices.spinach},
-            "ladies_finger": ${prices.ladies_finger},
-            "cabbage": ${prices.cabbage},
-            "capsicum": ${prices.capsicum},
-            "cauliflower": ${prices.cauliflower}
+            const sourceCode = `        let prices = {
+            "chilly": ${prices.chilly},        // Price per 5g
+            "tomato": ${prices.tomato},         // Price per piece
+            "spinach": ${prices.spinach},       // Price per piece
+            "ladies_finger": ${prices.ladies_finger},  // Price per piece
+            "cabbage": ${prices.cabbage},       // Price per piece
+            "capsicum": ${prices.capsicum},      // Price per piece
+            "cauliflower": ${prices.cauliflower}    // Price per piece
         };`;
 
             // Add source code display to admin panel
@@ -762,14 +767,14 @@
         }
 
         function copySourceCode() {
-            const sourceCode = `let prices = {
-            "chilly": ${prices.chilly},
-            "tomato": ${prices.tomato},
-            "spinach": ${prices.spinach},
-            "ladies_finger": ${prices.ladies_finger},
-            "cabbage": ${prices.cabbage},
-            "capsicum": ${prices.capsicum},
-            "cauliflower": ${prices.cauliflower}
+            const sourceCode = `        let prices = {
+            "chilly": ${prices.chilly},        // Price per 5g
+            "tomato": ${prices.tomato},         // Price per piece
+            "spinach": ${prices.spinach},       // Price per piece
+            "ladies_finger": ${prices.ladies_finger},  // Price per piece
+            "cabbage": ${prices.cabbage},       // Price per piece
+            "capsicum": ${prices.capsicum},      // Price per piece
+            "cauliflower": ${prices.cauliflower}    // Price per piece
         };`;
 
             navigator.clipboard.writeText(sourceCode).then(() => {
