@@ -600,6 +600,7 @@
 
             html += `
                 <button class="admin-btn" onclick="savePrices()">Save Prices</button>
+                <div id="githubStatus" style="margin-top: 15px;"></div>
                 <div class="password-change">
                     <h3>Change Admin Password</h3>
                     <input type="password" id="currentPassword" placeholder="Current Password" />
@@ -609,19 +610,221 @@
                     <p id="passwordError" style="color: red; display: none;"></p>
                     <p id="passwordSuccess" style="color: green; display: none;"></p>
                 </div>
+                <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
+                    <h4 style="color: #333; margin-top: 0;">GitHub Auto-Update Setup:</h4>
+                    <p style="font-size: 12px; color: #666; margin: 5px 0;">To enable automatic updates to all devices:</p>
+                    <ol style="font-size: 12px; color: #666; margin: 5px 0; padding-left: 20px;">
+                        <li>Go to GitHub Settings → Developer Settings → Personal Access Tokens</li>
+                        <li>Generate a new token with "repo" permissions</li>
+                        <li>Edit the GITHUB_CONFIG section in your HTML file</li>
+                        <li>Add your username, repository name, and token</li>
+                    </ol>
+                </div>
             `;
 
             adminContent.innerHTML = html;
         }
 
+        // GitHub integration settings - CONFIGURE THESE
+        const GITHUB_CONFIG = {
+            username: '', // Your GitHub username
+            repository: '', // Your repository name
+            token: '', // Your GitHub personal access token
+            filename: 'index.html' // Name of your HTML file
+        };
+
         function savePrices() {
-            // Show message that changes need to be made in source code
-            alert('For GitHub deployment: Please update prices directly in the source code.\n\nFind the "prices" object in the JavaScript section and modify the values there.\n\nCurrent admin interface is for preview only.');
+            for (let item in prices) {
+                const newPrice = parseFloat(document.getElementById(`price_${item}`).value);
+                if (!isNaN(newPrice) && newPrice >= 0) {
+                    prices[item] = newPrice;
+                }
+            }
+            
+            // Update displays immediately
+            updateProductList();
+            updatePriceList();
+            calculateTotal();
+            
+            // Try to auto-update GitHub if configured
+            if (GITHUB_CONFIG.username && GITHUB_CONFIG.repository && GITHUB_CONFIG.token) {
+                updateGitHubFile();
+            } else {
+                // Fallback to manual copy-paste method
+                showSourceCodeUpdate();
+                alert('Prices updated locally!\n\nTo enable automatic GitHub updates, configure your GitHub settings in the code.\n\nFor now, use the copy-paste method below.');
+            }
+        }
+
+        async function updateGitHubFile() {
+            try {
+                // Show loading
+                document.getElementById('githubStatus').innerHTML = '<p style="color: blue;">Updating GitHub repository...</p>';
+                
+                // Get current file content
+                const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/contents/${GITHUB_CONFIG.filename}`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (!getResponse.ok) {
+                    throw new Error('Failed to fetch current file');
+                }
+                
+                const fileData = await getResponse.json();
+                const currentContent = atob(fileData.content);
+                
+                // Update the prices in the content
+                const updatedContent = updatePricesInContent(currentContent);
+                
+                // Commit the updated file
+                const updateResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repository}/contents/${GITHUB_CONFIG.filename}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_CONFIG.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update prices - ${new Date().toLocaleString()}`,
+                        content: btoa(updatedContent),
+                        sha: fileData.sha
+                    })
+                });
+                
+                if (updateResponse.ok) {
+                    document.getElementById('githubStatus').innerHTML = '<p style="color: green;">✅ GitHub updated successfully! Changes will appear on all devices within a few minutes.</p>';
+                    alert('Prices updated successfully!\n\nChanges have been pushed to GitHub and will be live on all devices shortly.');
+                } else {
+                    throw new Error('Failed to update GitHub file');
+                }
+                
+            } catch (error) {
+                console.error('GitHub update failed:', error);
+                document.getElementById('githubStatus').innerHTML = '<p style="color: red;">❌ GitHub update failed. Using manual method below.</p>';
+                showSourceCodeUpdate();
+                alert('Automatic GitHub update failed.\n\nPlease use the manual copy-paste method shown below.');
+            }
+        }
+
+        function updatePricesInContent(content) {
+            // Create the new prices object string
+            const newPricesString = `let prices = {
+            "chilly": ${prices.chilly},
+            "tomato": ${prices.tomato},
+            "spinach": ${prices.spinach},
+            "ladies_finger": ${prices.ladies_finger},
+            "cabbage": ${prices.cabbage},
+            "capsicum": ${prices.capsicum},
+            "cauliflower": ${prices.cauliflower}
+        };`;
+            
+            // Replace the existing prices object
+            const pricesRegex = /let prices = \{[^}]*\};/s;
+            return content.replace(pricesRegex, newPricesString);
+        }
+
+        function showSourceCodeUpdate() {
+            const sourceCode = `let prices = {
+            "chilly": ${prices.chilly},
+            "tomato": ${prices.tomato},
+            "spinach": ${prices.spinach},
+            "ladies_finger": ${prices.ladies_finger},
+            "cabbage": ${prices.cabbage},
+            "capsicum": ${prices.capsicum},
+            "cauliflower": ${prices.cauliflower}
+        };`;
+
+            // Add source code display to admin panel
+            const adminContent = document.getElementById('adminContent');
+            const existingCode = document.getElementById('sourceCodeDisplay');
+            
+            if (existingCode) {
+                existingCode.remove();
+            }
+            
+            const codeDiv = document.createElement('div');
+            codeDiv.id = 'sourceCodeDisplay';
+            codeDiv.innerHTML = `
+                <div style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px; border-left: 4px solid #4CAF50;">
+                    <h3 style="color: #333; margin-top: 0;">Manual Update Method:</h3>
+                    <textarea readonly style="width: 100%; height: 120px; font-family: monospace; font-size: 12px; padding: 10px; background-color: #fff; border: 1px solid #ddd; border-radius: 3px;">${sourceCode}</textarea>
+                    <button class="admin-btn" onclick="copySourceCode()" style="margin-top: 10px;">Copy Code</button>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        Copy the code above and replace the prices section in your HTML file on GitHub.
+                    </p>
+                </div>
+            `;
+            
+            adminContent.appendChild(codeDiv);
+        }
+
+        function copySourceCode() {
+            const sourceCode = `let prices = {
+            "chilly": ${prices.chilly},
+            "tomato": ${prices.tomato},
+            "spinach": ${prices.spinach},
+            "ladies_finger": ${prices.ladies_finger},
+            "cabbage": ${prices.cabbage},
+            "capsicum": ${prices.capsicum},
+            "cauliflower": ${prices.cauliflower}
+        };`;
+
+            navigator.clipboard.writeText(sourceCode).then(() => {
+                alert('Source code copied to clipboard!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = sourceCode;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Source code copied!');
+            });
         }
 
         function changePassword() {
-            // Show message that password needs to be changed in source code
-            alert('For GitHub deployment: Please update the admin password directly in the source code.\n\nFind the "adminPassword" variable in the JavaScript section and change its value.\n\nCurrent admin interface is for preview only.');
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const errorElement = document.getElementById('passwordError');
+            const successElement = document.getElementById('passwordSuccess');
+            
+            // Hide previous messages
+            errorElement.style.display = 'none';
+            successElement.style.display = 'none';
+            
+            if (currentPassword !== adminPassword) {
+                errorElement.textContent = 'Current password is incorrect!';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                errorElement.textContent = 'New password must be at least 6 characters long!';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                errorElement.textContent = 'New passwords do not match!';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            // Update password
+            adminPassword = newPassword;
+            
+            successElement.textContent = 'Password changed successfully!';
+            successElement.style.display = 'block';
+            
+            // Clear form
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
         }
 
         window.onload = function() {
