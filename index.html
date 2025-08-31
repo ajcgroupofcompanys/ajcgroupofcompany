@@ -297,6 +297,12 @@
             color: #0c5460;
         }
 
+        .status-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -311,6 +317,29 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .config-section h4 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
         }
 
         /* Responsive Design for Mobile Screens */
@@ -406,9 +435,15 @@
 
         // Configuration - Update these values as needed
         const CONFIG = {
-            // Set your backend API URL here
-            API_BASE_URL: 'https://your-backend-domain.com', // Replace with your actual backend URL
-            // API_BASE_URL: 'http://localhost:3000', // For local development
+            // Backend API URLs - the system will try these in order
+            API_ENDPOINTS: [
+                'http://localhost:5000',     // Your local development server
+                'http://127.0.0.1:5000',     // Alternative localhost
+                'http://192.168.1.100:5000', // Replace with your local IP
+                'https://your-backend-domain.com' // Your production domain when ready
+            ],
+            // Current active endpoint (will be set automatically)
+            ACTIVE_API_URL: null
         };
 
         // EDIT PRICES HERE - Change these values to update prices across all devices
@@ -436,6 +471,32 @@
         };
 
         let isAdminLoggedIn = false;
+
+        // Function to find working API endpoint
+        async function findWorkingEndpoint() {
+            if (CONFIG.ACTIVE_API_URL) {
+                return CONFIG.ACTIVE_API_URL;
+            }
+
+            for (const endpoint of CONFIG.API_ENDPOINTS) {
+                try {
+                    const response = await fetch(`${endpoint}/api/health`, {
+                        method: 'GET',
+                        timeout: 5000 // 5 second timeout
+                    });
+                    if (response.ok) {
+                        CONFIG.ACTIVE_API_URL = endpoint;
+                        console.log(`Connected to backend at: ${endpoint}`);
+                        return endpoint;
+                    }
+                } catch (error) {
+                    console.log(`Failed to connect to ${endpoint}: ${error.message}`);
+                    continue;
+                }
+            }
+            
+            throw new Error('No working backend endpoint found');
+        }
 
         function updateProductList() {
             for (let i = 1; i <= 5; i++) {
@@ -622,6 +683,19 @@
             }
         }
 
+        function updateBackendUrl() {
+            const newUrl = document.getElementById('customApiUrl').value.trim();
+            if (newUrl) {
+                // Add to the beginning of the endpoints array
+                CONFIG.API_ENDPOINTS.unshift(newUrl);
+                // Reset active URL to force re-detection
+                CONFIG.ACTIVE_API_URL = null;
+                
+                document.getElementById('urlUpdateStatus').innerHTML = 
+                    '<div class="status-box status-success">✅ URL updated! Test the connection to verify it works.</div>';
+            }
+        }
+
         function showPriceEditor() {
             const adminContent = document.getElementById('adminContent');
             let html = `
@@ -649,6 +723,20 @@
             }
 
             html += `
+                <div class="config-section">
+                    <h4>🔧 Backend Configuration</h4>
+                    <p style="font-size: 12px; margin: 5px 0;">Current backend URLs (trying in this order):</p>
+                    <ul style="font-size: 11px; margin: 5px 0; padding-left: 20px;">
+                        ${CONFIG.API_ENDPOINTS.map(url => `<li><code>${url}</code></li>`).join('')}
+                    </ul>
+                    <input type="url" id="customApiUrl" class="url-input" placeholder="http://localhost:5000 or http://your-ip:5000" />
+                    <button class="admin-btn" onclick="updateBackendUrl()" style="padding: 5px 10px; font-size: 12px;">Add Custom URL</button>
+                    <div id="urlUpdateStatus"></div>
+                    
+                    <button class="admin-btn" onclick="testBackendConnection()" style="padding: 5px 10px; font-size: 12px; margin-top: 10px;">🔗 Test Connection</button>
+                    <div id="connectionStatus"></div>
+                </div>
+
                 <label for="adminSecret" style="display: block; margin-top: 15px; font-weight: bold;">Admin Secret Key:</label>
                 <input type="password" id="adminSecret" placeholder="Enter admin secret for GitHub updates" style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
                 
@@ -664,15 +752,6 @@
                     <p id="passwordError" style="color: red; display: none;"></p>
                     <p id="passwordSuccess" style="color: green; display: none;"></p>
                 </div>
-                
-                <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
-                    <h4 style="color: #333; margin-top: 0;">Backend API Status:</h4>
-                    <p style="font-size: 12px; color: #666; margin: 5px 0;">
-                        API URL: <code>${CONFIG.API_BASE_URL}</code>
-                    </p>
-                    <button class="admin-btn" onclick="testBackendConnection()" style="padding: 5px 10px; font-size: 12px;">Test Connection</button>
-                    <div id="connectionStatus" style="margin-top: 10px;"></div>
-                </div>
             `;
 
             adminContent.innerHTML = html;
@@ -680,18 +759,28 @@
 
         async function testBackendConnection() {
             const statusDiv = document.getElementById('connectionStatus');
-            statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connection...';
+            statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connections...';
             
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/health`);
-                if (response.ok) {
-                    const data = await response.json();
-                    statusDiv.innerHTML = '<div class="status-box status-success">✅ Backend connection successful!</div>';
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                const workingEndpoint = await findWorkingEndpoint();
+                statusDiv.innerHTML = `<div class="status-box status-success">✅ Backend connected successfully!<br><small>Active endpoint: <code>${workingEndpoint}</code></small></div>`;
             } catch (error) {
-                statusDiv.innerHTML = `<div class="status-box status-error">❌ Backend connection failed: ${error.message}</div>`;
+                statusDiv.innerHTML = `
+                    <div class="status-box status-error">
+                        ❌ All backend connections failed!<br>
+                        <small>Make sure your backend server is running on port 5000</small><br>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer;">🔧 Troubleshooting Tips</summary>
+                            <ul style="font-size: 12px; margin: 5px 0; text-align: left;">
+                                <li>Start your backend server: <code>python app.py</code> or <code>node server.js</code></li>
+                                <li>Check if port 5000 is free: <code>netstat -an | grep 5000</code></li>
+                                <li>Try accessing <a href="http://localhost:5000/api/health" target="_blank">http://localhost:5000/api/health</a> in your browser</li>
+                                <li>If using a different port, add it using "Add Custom URL" above</li>
+                                <li>Check firewall settings if accessing from another device</li>
+                            </ul>
+                        </details>
+                    </div>
+                `;
             }
         }
 
@@ -721,10 +810,14 @@
             // Disable button and show loading
             savePricesBtn.disabled = true;
             savePricesBtn.innerHTML = '<div class="loading-spinner"></div>Updating GitHub...';
-            statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Updating prices in GitHub repository...</div>';
+            statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Connecting to backend server...</div>';
 
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/update-prices`, {
+                const workingEndpoint = await findWorkingEndpoint();
+                
+                statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Updating prices in GitHub repository...</div>';
+
+                const response = await fetch(`${workingEndpoint}/api/update-prices`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -761,245 +854,3 @@
                 statusDiv.innerHTML = `
                     <div class="status-box status-error">
                         ❌ Connection error: ${error.message}
-                        <br>
-                        <small>Please check if the backend server is running.</small>
-                    </div>
-                `;
-            } finally {
-                // Re-enable button
-                savePricesBtn.disabled = false;
-                savePricesBtn.innerHTML = 'Update Prices & Push to GitHub';
-                
-                // Clear admin secret for security
-                document.getElementById('adminSecret').value = '';
-            }
-        }
-
-        function changePassword() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            const errorElement = document.getElementById('passwordError');
-            const successElement = document.getElementById('passwordSuccess');
-            
-            // Hide previous messages
-            errorElement.style.display = 'none';
-            successElement.style.display = 'none';
-            
-            if (currentPassword !== adminPassword) {
-                errorElement.textContent = 'Current password is incorrect!';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                errorElement.textContent = 'New password must be at least 6 characters long!';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            if (newPassword !== confirmPassword) {
-                errorElement.textContent = 'New passwords do not match!';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            // Update password
-            adminPassword = newPassword;
-            
-            successElement.textContent = 'Password changed successfully! Remember to update it in your GitHub code too.';
-            successElement.style.display = 'block';
-            
-            // Clear form
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-        }
-
-        window.onload = function() {
-            updateProductList();
-            updatePriceList();
-            showProductFields();
-            fadeInOnScroll();
-        };
-    </script>
-</head>
-<body>
-    <header>
-        <h1>AJC Group of Company</h1>
-    </header>
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#order">Order</a>
-        <a href="#about">About Us</a>
-        <a href="#feedback">Feedback</a>
-    </nav>
-
-    <section id="home" class="fade-in">
-        <h2>Welcome to AJC Group of Company</h2>
-        <p>Welcome to AJC Group of Company, where we bring fresh farm products directly to your doorstep. Founded in 2023 by Antony Asher and Joseph Johann, we are committed to delivering high-quality, sustainable, and affordable produce. Whether you're looking for fresh vegetables, fruits, or services from our diverse sectors like Motor Works and Paint Shop, we're here to meet your needs. Join us on our journey to provide the best for you and your family!</p>
-    </section>
-
-    <div class="price-list">
-        <h2>PRICE LIST AND QUANTITY</h2>
-        <h3>Chilly = 10rs/5g</h3>
-        <h3>Tomato = 5rs/per piece</h3>
-        <h3>Capsicum = 20rs/per piece</h3>
-        <h3>Cabbage = 50rs/per piece</h3>
-        <h3>Ladies finger = 2rs/per piece</h3>
-        <h3>Cauliflower = 50rs/per piece</h3>
-    </div>
-
-    <section id="order" class="fade-in">
-        <h2>Order</h2>
-        <div class="order-form">
-            <h3>Place Your Order</h3>
-            <form onsubmit="return sendEmail();">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-
-                <label for="itemCount">How many items do you need?</label>
-                <select id="itemCount" name="itemCount" onchange="showProductFields()">
-                    <option value="1">1 item</option>
-                    <option value="2">2 items</option>
-                    <option value="3">3 items</option>
-                    <option value="4">4 items</option>
-                    <option value="5">5 items</option>
-                </select>
-
-                <div id="productFieldset1" class="product-fieldset" style="display: block;">
-                    <label for="product1">Product 1:</label>
-                    <select id="product1" name="product1" onchange="updateProductImage(1)">
-                        <option value="">Select Product</option>
-                    </select>
-                    <label for="quantity1">Quantity:</label>
-                    <input type="number" id="quantity1" name="quantity1" min="1" onchange="calculateTotal()">
-                    <img id="productImage1" class="product-image" style="display:none;" alt="Product Image">
-                </div>
-
-                <div id="productFieldset2" class="product-fieldset" style="display: none;">
-                    <label for="product2">Product 2:</label>
-                    <select id="product2" name="product2" onchange="updateProductImage(2)">
-                        <option value="">Select Product</option>
-                    </select>
-                    <label for="quantity2">Quantity:</label>
-                    <input type="number" id="quantity2" name="quantity2" min="1" onchange="calculateTotal()">
-                    <img id="productImage2" class="product-image" style="display:none;" alt="Product Image">
-                </div>
-
-                <div id="productFieldset3" class="product-fieldset" style="display: none;">
-                    <label for="product3">Product 3:</label>
-                    <select id="product3" name="product3" onchange="updateProductImage(3)">
-                        <option value="">Select Product</option>
-                    </select>
-                    <label for="quantity3">Quantity:</label>
-                    <input type="number" id="quantity3" name="quantity3" min="1" onchange="calculateTotal()">
-                    <img id="productImage3" class="product-image" style="display:none;" alt="Product Image">
-                </div>
-
-                <div id="productFieldset4" class="product-fieldset" style="display: none;">
-                    <label for="product4">Product 4:</label>
-                    <select id="product4" name="product4" onchange="updateProductImage(4)">
-                        <option value="">Select Product</option>
-                    </select>
-                    <label for="quantity4">Quantity:</label>
-                    <input type="number" id="quantity4" name="quantity4" min="1" onchange="calculateTotal()">
-                    <img id="productImage4" class="product-image" style="display:none;" alt="Product Image">
-                </div>
-
-                <div id="productFieldset5" class="product-fieldset" style="display: none;">
-                    <label for="product5">Product 5:</label>
-                    <select id="product5" name="product5" onchange="updateProductImage(5)">
-                        <option value="">Select Product</option>
-                    </select>
-                    <label for="quantity5">Quantity:</label>
-                    <input type="number" id="quantity5" name="quantity5" min="1" onchange="calculateTotal()">
-                    <img id="productImage5" class="product-image" style="display:none;" alt="Product Image">
-                </div>
-
-                <div class="total">
-                    <span id="totalCost">Total Cost: Rs 0</span>
-                </div>
-
-                <input type="submit" value="Submit Order">
-            </form>
-        </div>
-    </section>
-
-    <section id="about" class="fade-in">
-        <div class="about-section">
-            <h1>About Us</h1>
-            <p>AJC Group of Company, founded in 2023 by CEO and Founder Antony Asher and COO and Co-Founder Joseph Johann, is committed to delivering high-quality farm-fresh produce directly to your doorstep. Our focus is on providing a wide variety of vegetables, fruits, and other farm products with an emphasis on freshness, sustainability, and affordability.</p>
-
-            <p>In addition to our core offerings in farm products, AJC Group has diversified into several other sectors, including Motor Works, Paint Shop, and more, ensuring a comprehensive range of services to meet the needs of our customers.</p>
-
-            <p>Our mission is to make healthy and fresh food easily accessible to everyone while supporting local farmers and communities, and we are constantly expanding to offer the best products and services across multiple industries.</p>
-
-            <h2>OUR TEAM</h2>
-            <h3>CEO [CHIEF EXECUTIVE OFFICER]</h3>
-            <h4>Mr Antony Asher [FOUNDER OF COMPANY]</h4>
-            
-            <h3>COO [CHIEF OPERATIONS OFFICER]</h3>
-            <h4>Mr Joseph Johann [CO-FOUNDER]</h4>
-
-            <h2>FARM</h2>
-            <img src="static/images/ajc.jpg" alt="AJC Farm">
-            <img src="static/images/banana.jpg" alt="Banana Farm">
-            <img src="static/images/tomatop.jpg" alt="Tomato Plants">
-            <img src="static/images/chillyp.jpg" alt="Chilly Plants">
-            <img src="static/images/chillyp2.jpg" alt="Chilly Plants 2">
-            <p>Fresh and quality vegetables since 2023.</p>
-
-            <h2>OUR AIM</h2>
-            <h4>Our aim is to ensure good and quality vegetables from our farm to ensure nurture healthy generation</h4>
-            
-            <h2>CONTACT US</h2>
-            <h4>Mob: 9745607925</h4>
-            <h4>Gmail: ajcgroupofcompany047@gmail.com</h4>
-        </div>
-    </section>
-
-    <section id="feedback" class="fade-in">
-        <h2>Feedback</h2>
-        <div class="feedback-form">
-            <form onsubmit="return sendFeedbackEmail();">
-                <label for="feedbackName">Your Name:</label>
-                <input type="text" id="feedbackName" name="feedbackName" required>
-
-                <label for="feedbackEmail">Your Email:</label>
-                <input type="email" id="feedbackEmail" name="feedbackEmail" required>
-
-                <label for="senderGmail">Your Gmail:</label>
-                <input type="email" id="senderGmail" name="senderGmail" required>
-
-                <label for="feedbackMessage">Your Feedback:</label>
-                <textarea id="feedbackMessage" name="feedbackMessage" rows="5" required></textarea>
-
-                <input type="submit" value="Submit Feedback">
-            </form>
-        </div>
-    </section>
-
-    <footer>
-        <p>© 2025 AJC Group of Company. All rights reserved.</p>
-    </footer>
-
-    <!-- Admin Panel -->
-    <div id="adminPanel" class="admin-panel">
-        <div class="admin-content" id="adminContent">
-            <!-- Admin content will be dynamically loaded here -->
-        </div>
-    </div>
-
-    <!-- Floating Admin Button -->
-    <button class="admin-floating-btn" onclick="showAdminPanel()" title="Admin Login">⚙️</button>
-
-</body>
-</html>
-
-
-
