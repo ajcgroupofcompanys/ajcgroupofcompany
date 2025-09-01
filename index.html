@@ -407,15 +407,15 @@
         // Configuration - Update these values as needed
         const CONFIG = {
             // Set your backend API URL here
-            API_BASE_URL: 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany', // Replace with your actual backend URL
+            API_BASE_URL: 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany/', // Replace with your actual backend URL
             // API_BASE_URL: 'http://localhost:5000', // For local development
         };
 
         // EDIT PRICES HERE - Change these values to update prices across all devices
         let prices = {
-            "chilly": 2,        // Price per peice
+            "chilly": 10,        // Price per 5g
             "tomato": 5,         // Price per piece
-            "spinach": 20,       // Price per piece
+            "spinach": 10,       // Price per piece
             "ladies_finger": 2,  // Price per piece
             "cabbage": 50,       // Price per piece
             "capsicum": 20,      // Price per piece
@@ -519,11 +519,11 @@
 
             const subject = "Order from " + name;
             const mailtoLink = "mailto:ajcgroupofcompany41@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + body;
-            
+
             setTimeout(function() {
                 window.location.href = mailtoLink;
             }, 100);
-            
+
             return false;
         }
 
@@ -542,11 +542,11 @@
 
             const subject = "Feedback from " + name;
             const mailtoLink = "mailto:antonyasher71@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + body;
-            
+
             setTimeout(function() {
                 window.location.href = mailtoLink;
             }, 100);
-            
+
             return false;
         }
 
@@ -573,7 +573,7 @@
                     "capsicum": "Capsicum",
                     "cauliflower": "Cauliflower"
                 };
-                
+
                 let html = '<h2>PRICE LIST AND QUANTITY</h2>';
                 for (let item in prices) {
                     if (productNames[item]) {
@@ -628,9 +628,9 @@
                 <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
                 <h2 class="admin-header">Price Management</h2>
             `;
-            
+
             const productNames = {
-                "chilly": "Chilly (Rs/per peice)",
+                "chilly": "Chilly (Rs/5g)",
                 "tomato": "Tomato (Rs/per piece)",
                 "spinach": "Spinach (Rs/per piece)",
                 "ladies_finger": "Ladies finger (Rs/per piece)",
@@ -651,7 +651,7 @@
             html += `
                 <label for="adminSecret" style="display: block; margin-top: 15px; font-weight: bold;">Admin Secret Key:</label>
                 <input type="password" id="adminSecret" placeholder="Enter admin secret for GitHub updates" style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
-                
+
                 <button class="admin-btn" id="savePricesBtn" onclick="savePrices()">Update Prices & Push to GitHub</button>
                 <div id="updateStatus" style="margin-top: 15px;"></div>
 
@@ -664,7 +664,7 @@
                     <p id="passwordError" style="color: red; display: none;"></p>
                     <p id="passwordSuccess" style="color: green; display: none;"></p>
                 </div>
-                
+
                 <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
                     <h4 style="color: #333; margin-top: 0;">Backend API Status:</h4>
                     <p style="font-size: 12px; color: #666; margin: 5px 0;">
@@ -681,7 +681,7 @@
         async function testBackendConnection() {
             const statusDiv = document.getElementById('connectionStatus');
             statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connection...';
-            
+
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/api/health`);
                 if (response.ok) {
@@ -769,7 +769,7 @@
                 // Re-enable button
                 savePricesBtn.disabled = false;
                 savePricesBtn.innerHTML = 'Update Prices & Push to GitHub';
-                
+
                 // Clear admin secret for security
                 document.getElementById('adminSecret').value = '';
             }
@@ -779,38 +779,38 @@
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             const errorElement = document.getElementById('passwordError');
             const successElement = document.getElementById('passwordSuccess');
-            
+
             // Hide previous messages
             errorElement.style.display = 'none';
             successElement.style.display = 'none';
-            
+
             if (currentPassword !== adminPassword) {
                 errorElement.textContent = 'Current password is incorrect!';
                 errorElement.style.display = 'block';
                 return;
             }
-            
+
             if (newPassword.length < 6) {
                 errorElement.textContent = 'New password must be at least 6 characters long!';
                 errorElement.style.display = 'block';
                 return;
             }
-            
+
             if (newPassword !== confirmPassword) {
                 errorElement.textContent = 'New passwords do not match!';
                 errorElement.style.display = 'block';
                 return;
             }
-            
+
             // Update password
             adminPassword = newPassword;
-            
+
             successElement.textContent = 'Password changed successfully! Remember to update it in your GitHub code too.';
             successElement.style.display = 'block';
-            
+
             // Clear form
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
@@ -843,10 +843,9 @@
 
     <div class="price-list">
         <h2>PRICE LIST AND QUANTITY</h2>
-        <h3>Chilly = 2rs/per peice</h3>
+        <h3>Chilly = 10rs/5g</h3>
         <h3>Tomato = 5rs/per piece</h3>
         <h3>Capsicum = 20rs/per piece</h3>
-        <h3>spinach = 20rs/per piece</h3
         <h3>Cabbage = 50rs/per piece</h3>
         <h3>Ladies finger = 2rs/per piece</h3>
         <h3>Cauliflower = 50rs/per piece</h3>
@@ -943,7 +942,7 @@
             <h2>OUR TEAM</h2>
             <h3>CEO [CHIEF EXECUTIVE OFFICER]</h3>
             <h4>Mr Antony Asher [FOUNDER OF COMPANY]</h4>
-            
+
             <h3>COO [CHIEF OPERATIONS OFFICER]</h3>
             <h4>Mr Joseph Johann [CO-FOUNDER]</h4>
 
@@ -953,12 +952,11 @@
             <img src="static/images/tomatop.jpg" alt="Tomato Plants">
             <img src="static/images/chillyp.jpg" alt="Chilly Plants">
             <img src="static/images/chillyp2.jpg" alt="Chilly Plants 2">
-            <img src="cabbagep.jpg" alt="cabbage plant "
             <p>Fresh and quality vegetables since 2023.</p>
 
             <h2>OUR AIM</h2>
             <h4>Our aim is to ensure good and quality vegetables from our farm to ensure nurture healthy generation</h4>
-            
+
             <h2>CONTACT US</h2>
             <h4>Mob: 9745607925</h4>
             <h4>Gmail: ajcgroupofcompany047@gmail.com</h4>
@@ -1002,11 +1000,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
