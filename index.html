@@ -172,7 +172,7 @@
             background-color: white;
             padding: 30px;
             border-radius: 10px;
-            max-width: 500px;
+            max-width: 900px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -217,6 +217,14 @@
         .admin-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+        }
+
+        .admin-btn.secondary {
+            background-color: #2196F3;
+        }
+
+        .admin-btn.secondary:hover {
+            background-color: #1976D2;
         }
 
         .price-edit {
@@ -313,6 +321,145 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Order Management Styles */
+        .admin-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .admin-tab {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .admin-tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .admin-tab:hover {
+            background-color: #ddd;
+        }
+
+        .admin-tab.active:hover {
+            background-color: #45a049;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .orders-table th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .orders-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .orders-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .filter-controls {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .filter-controls label {
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .filter-controls select,
+        .filter-controls input {
+            margin-right: 15px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .stats-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .stats-card p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-details {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .order-items {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
         /* Responsive Design for Mobile Screens */
         @media only screen and (max-width: 600px) {
             body, section, .order-form, .feedback-form {
@@ -370,6 +517,36 @@
                 width: 100%;
                 height: auto;
                 margin: 10px 0;
+            }
+
+            .admin-content {
+                width: 95%;
+                max-height: 90vh;
+                padding: 15px;
+            }
+
+            .orders-table {
+                font-size: 12px;
+            }
+
+            .orders-table th,
+            .orders-table td {
+                padding: 5px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-tabs {
+                flex-wrap: wrap;
+            }
+
+            .admin-tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+                font-size: 14px;
             }
         }
 
@@ -436,6 +613,50 @@
         };
 
         let isAdminLoggedIn = false;
+        let currentOrderNumber = 1;
+
+        // Order Management System
+        let orders = [];
+
+        // Load orders from localStorage on page load
+        function loadOrders() {
+            const savedOrders = localStorage.getItem('ajc_orders');
+            if (savedOrders) {
+                orders = JSON.parse(savedOrders);
+                // Update current order number to avoid duplicates
+                if (orders.length > 0) {
+                    const maxOrderNum = Math.max(...orders.map(order => order.orderNumber));
+                    currentOrderNumber = maxOrderNum + 1;
+                }
+            }
+        }
+
+        // Save orders to localStorage
+        function saveOrders() {
+            localStorage.setItem('ajc_orders', JSON.stringify(orders));
+        }
+
+        // Generate unique order number
+        function getNextOrderNumber() {
+            return currentOrderNumber++;
+        }
+
+        // Add new order to the system
+        function addOrder(customerName, customerEmail, orderItems, totalAmount) {
+            const order = {
+                orderNumber: getNextOrderNumber(),
+                date: new Date().toISOString(),
+                customerName: customerName,
+                customerEmail: customerEmail,
+                items: orderItems,
+                totalAmount: totalAmount,
+                status: 'Pending'
+            };
+            
+            orders.push(order);
+            saveOrders();
+            return order.orderNumber;
+        }
 
         function updateProductList() {
             for (let i = 1; i <= 5; i++) {
@@ -498,6 +719,7 @@
             const itemCount = document.getElementById("itemCount").value;
             let totalAmount = 0;
             let hasProducts = false;
+            let orderItems = [];
 
             for (let i = 1; i <= itemCount; i++) {
                 const product = document.getElementById("product" + i).value;
@@ -507,6 +729,14 @@
                     const total = prices[product] * quantity;
                     body += "Product " + i + ": " + product.replace(/_/g, ' ') + "%0D%0AQuantity: " + quantity + "%0D%0ATotal Cost: Rs " + total + "%0D%0A%0D%0A";
                     totalAmount += total;
+                    
+                    // Store order item details
+                    orderItems.push({
+                        product: product.replace(/_/g, ' '),
+                        quantity: quantity,
+                        price: prices[product],
+                        total: total
+                    });
                 }
             }
 
@@ -515,14 +745,32 @@
                 return false;
             }
 
-            body += "Net Amount: Rs " + totalAmount;
+            // Add order to system and get order number
+            const orderNumber = addOrder(name, email, orderItems, totalAmount);
+            
+            body += "Net Amount: Rs " + totalAmount + "%0D%0AOrder Number: " + orderNumber;
 
-            const subject = "Order from " + name;
+            const subject = "Order #" + orderNumber + " from " + name;
             const mailtoLink = "mailto:ajcgroupofcompany41@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + body;
+            
+            // Show success message with order number
+            alert("Order placed successfully! Your order number is: " + orderNumber);
             
             setTimeout(function() {
                 window.location.href = mailtoLink;
             }, 100);
+            
+            // Clear form
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
+            for (let i = 1; i <= 5; i++) {
+                const productSelect = document.getElementById("product" + i);
+                const quantityInput = document.getElementById("quantity" + i);
+                if (productSelect) productSelect.value = "";
+                if (quantityInput) quantityInput.value = "";
+                updateProductImage(i);
+            }
+            calculateTotal();
             
             return false;
         }
@@ -577,7 +825,7 @@
                 let html = '<h2>PRICE LIST AND QUANTITY</h2>';
                 for (let item in prices) {
                     if (productNames[item]) {
-                        let unit = item === 'chilly' ? '/5g' : '/per piece';
+                        let unit = item === 'chilly' ? '/per piece' : '/per piece';
                         html += `<h3>${productNames[item]} = ${prices[item]}rs${unit}</h3>`;
                     }
                 }
@@ -590,7 +838,7 @@
             if (!isAdminLoggedIn) {
                 showAdminLogin();
             } else {
-                showPriceEditor();
+                showAdminDashboard();
             }
         }
 
@@ -616,21 +864,104 @@
             const inputPassword = document.getElementById('adminPasswordInput').value;
             if (inputPassword === adminPassword) {
                 isAdminLoggedIn = true;
-                showPriceEditor();
+                showAdminDashboard();
             } else {
                 document.getElementById('loginError').style.display = 'block';
             }
         }
 
-        function showPriceEditor() {
+        function showAdminDashboard() {
             const adminContent = document.getElementById('adminContent');
-            let html = `
+            adminContent.innerHTML = `
                 <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
-                <h2 class="admin-header">Price Management</h2>
+                <h2 class="admin-header">Admin Dashboard</h2>
+                
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="showTab('orders')">Order Management</button>
+                    <button class="admin-tab" onclick="showTab('prices')">Price Management</button>
+                    <button class="admin-tab" onclick="showTab('settings')">Settings</button>
+                </div>
+
+                <div id="orders-tab" class="tab-content active">
+                    ${generateOrdersTabContent()}
+                </div>
+
+                <div id="prices-tab" class="tab-content">
+                    ${generatePricesTabContent()}
+                </div>
+
+                <div id="settings-tab" class="tab-content">
+                    ${generateSettingsTabContent()}
+                </div>
             `;
             
+            // Initialize orders view
+            displayOrders();
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.admin-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Refresh data if needed
+            if (tabName === 'orders') {
+                displayOrders();
+            }
+        }
+
+        function generateOrdersTabContent() {
+            return `
+                <div class="stats-grid" id="orderStats">
+                    <!-- Stats will be populated by JavaScript -->
+                </div>
+                
+                <div class="filter-controls">
+                    <label for="filterMonth">Month:</label>
+                    <select id="filterMonth" onchange="displayOrders()">
+                        <option value="">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    
+                    <label for="filterYear">Year:</label>
+                    <select id="filterYear" onchange="displayOrders()">
+                        <option value="">All Years</option>
+                    </select>
+                    
+                    <button class="admin-btn" onclick="exportOrders()">Export Data</button>
+                    <button class="admin-btn" onclick="clearAllOrders()" style="background-color: #f44336;">Clear All Orders</button>
+                </div>
+                
+                <div id="ordersTableContainer">
+                    <!-- Orders table will be populated by JavaScript -->
+                </div>
+            `;
+        }
+
+        function generatePricesTabContent() {
             const productNames = {
-                "chilly": "Chilly (Rs/per peice)",
+                "chilly": "Chilly (Rs/per piece)",
                 "tomato": "Tomato (Rs/per piece)",
                 "spinach": "Spinach (Rs/per piece)",
                 "ladies_finger": "Ladies finger (Rs/per piece)",
@@ -639,6 +970,8 @@
                 "cauliflower": "Cauliflower (Rs/per piece)"
             };
 
+            let html = '<h3>Update Product Prices</h3>';
+            
             for (let item in prices) {
                 html += `
                     <div class="price-edit">
@@ -655,16 +988,6 @@
                 <button class="admin-btn" id="savePricesBtn" onclick="savePrices()">Update Prices & Push to GitHub</button>
                 <div id="updateStatus" style="margin-top: 15px;"></div>
 
-                <div class="password-change">
-                    <h3>Change Admin Password</h3>
-                    <input type="password" id="currentPassword" placeholder="Current Password" />
-                    <input type="password" id="newPassword" placeholder="New Password" />
-                    <input type="password" id="confirmPassword" placeholder="Confirm New Password" />
-                    <button class="admin-btn" onclick="changePassword()">Change Password</button>
-                    <p id="passwordError" style="color: red; display: none;"></p>
-                    <p id="passwordSuccess" style="color: green; display: none;"></p>
-                </div>
-                
                 <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
                     <h4 style="color: #333; margin-top: 0;">Backend API Status:</h4>
                     <p style="font-size: 12px; color: #666; margin: 5px 0;">
@@ -675,7 +998,273 @@
                 </div>
             `;
 
-            adminContent.innerHTML = html;
+            return html;
+        }
+
+        function generateSettingsTabContent() {
+            return `
+                <div class="password-change">
+                    <h3>Change Admin Password</h3>
+                    <input type="password" id="currentPassword" placeholder="Current Password" />
+                    <input type="password" id="newPassword" placeholder="New Password" />
+                    <input type="password" id="confirmPassword" placeholder="Confirm New Password" />
+                    <button class="admin-btn" onclick="changePassword()">Change Password</button>
+                    <p id="passwordError" style="color: red; display: none;"></p>
+                    <p id="passwordSuccess" style="color: green; display: none;"></p>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-radius: 5px;">
+                    <h4>Data Management</h4>
+                    <p>Orders are stored locally on each device. To sync across devices, you would need to implement a backend database.</p>
+                    <button class="admin-btn secondary" onclick="backupData()">Download Backup</button>
+                    <button class="admin-btn secondary" onclick="document.getElementById('restoreFile').click()">Restore Backup</button>
+                    <input type="file" id="restoreFile" style="display: none;" onchange="restoreData(event)" accept=".json">
+                </div>
+            `;
+        }
+
+        function displayOrders() {
+            const filterMonth = document.getElementById('filterMonth').value;
+            const filterYear = document.getElementById('filterYear').value;
+            
+            // Populate year dropdown
+            const yearSelect = document.getElementById('filterYear');
+            const currentYear = new Date().getFullYear();
+            yearSelect.innerHTML = '<option value="">All Years</option>';
+            for (let year = currentYear; year >= 2023; year--) {
+                yearSelect.innerHTML += `<option value="${year}" ${filterYear == year ? 'selected' : ''}>${year}</option>`;
+            }
+
+            // Filter orders
+            let filteredOrders = orders.filter(order => {
+                const orderDate = new Date(order.date);
+                const orderMonth = orderDate.getMonth() + 1;
+                const orderYear = orderDate.getFullYear();
+                
+                let matchesMonth = !filterMonth || orderMonth == filterMonth;
+                let matchesYear = !filterYear || orderYear == filterYear;
+                
+                return matchesMonth && matchesYear;
+            });
+
+            // Update statistics
+            updateOrderStats(filteredOrders);
+
+            // Display orders table
+            displayOrdersTable(filteredOrders);
+        }
+
+        function updateOrderStats(filteredOrders) {
+            const statsContainer = document.getElementById('orderStats');
+            
+            const totalOrders = filteredOrders.length;
+            const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const avgOrderValue = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0;
+            
+            // Get most popular product
+            const productCounts = {};
+            filteredOrders.forEach(order => {
+                order.items.forEach(item => {
+                    productCounts[item.product] = (productCounts[item.product] || 0) + item.quantity;
+                });
+            });
+            
+            const popularProduct = Object.keys(productCounts).length > 0 
+                ? Object.keys(productCounts).reduce((a, b) => productCounts[a] > productCounts[b] ? a : b)
+                : 'None';
+
+            statsContainer.innerHTML = `
+                <div class="stats-card">
+                    <h3>${totalOrders}</h3>
+                    <p>Total Orders</p>
+                </div>
+                <div class="stats-card">
+                    <h3>₹${totalRevenue}</h3>
+                    <p>Total Revenue</p>
+                </div>
+                <div class="stats-card">
+                    <h3>₹${avgOrderValue}</h3>
+                    <p>Avg Order Value</p>
+                </div>
+                <div class="stats-card">
+                    <h3>${popularProduct}</h3>
+                    <p>Popular Product</p>
+                </div>
+            `;
+        }
+
+        function displayOrdersTable(filteredOrders) {
+            const tableContainer = document.getElementById('ordersTableContainer');
+            
+            if (filteredOrders.length === 0) {
+                tableContainer.innerHTML = '<p style="text-align: center; color: #666;">No orders found for the selected period.</p>';
+                return;
+            }
+
+            let tableHTML = `
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(order => {
+                const orderDate = new Date(order.date);
+                const formattedDate = orderDate.toLocaleDateString() + ' ' + orderDate.toLocaleTimeString();
+                
+                const itemsHTML = order.items.map(item => 
+                    `${item.product} (${item.quantity}x₹${item.price})`
+                ).join(', ');
+
+                tableHTML += `
+                    <tr>
+                        <td>#${order.orderNumber}</td>
+                        <td>${formattedDate}</td>
+                        <td>
+                            <div><strong>${order.customerName}</strong></div>
+                            <div style="font-size: 12px; color: #666;">${order.customerEmail}</div>
+                        </td>
+                        <td>
+                            <div class="order-items">${itemsHTML}</div>
+                        </td>
+                        <td><strong>₹${order.totalAmount}</strong></td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteOrder(${order.orderNumber})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        function deleteOrder(orderNumber) {
+            if (confirm('Are you sure you want to delete order #' + orderNumber + '?')) {
+                orders = orders.filter(order => order.orderNumber !== orderNumber);
+                saveOrders();
+                displayOrders();
+                alert('Order deleted successfully!');
+            }
+        }
+
+        function clearAllOrders() {
+            if (confirm('Are you sure you want to delete ALL orders? This action cannot be undone!')) {
+                if (confirm('This will permanently delete all order data. Are you absolutely sure?')) {
+                    orders = [];
+                    currentOrderNumber = 1;
+                    saveOrders();
+                    displayOrders();
+                    alert('All orders have been cleared!');
+                }
+            }
+        }
+
+        function exportOrders() {
+            const filterMonth = document.getElementById('filterMonth').value;
+            const filterYear = document.getElementById('filterYear').value;
+            
+            let filteredOrders = orders.filter(order => {
+                const orderDate = new Date(order.date);
+                const orderMonth = orderDate.getMonth() + 1;
+                const orderYear = orderDate.getFullYear();
+                
+                let matchesMonth = !filterMonth || orderMonth == filterMonth;
+                let matchesYear = !filterYear || orderYear == filterYear;
+                
+                return matchesMonth && matchesYear;
+            });
+
+            if (filteredOrders.length === 0) {
+                alert('No orders to export for the selected period.');
+                return;
+            }
+
+            // Create CSV content
+            let csvContent = "Order Number,Date,Customer Name,Customer Email,Items,Total Amount\n";
+            
+            filteredOrders.forEach(order => {
+                const formattedDate = new Date(order.date).toLocaleString();
+                const itemsText = order.items.map(item => 
+                    `${item.product}(${item.quantity}x${item.price})`
+                ).join(';');
+                
+                csvContent += `${order.orderNumber},"${formattedDate}","${order.customerName}","${order.customerEmail}","${itemsText}",${order.totalAmount}\n`;
+            });
+
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const filename = `AJC_Orders_${filterYear || 'All'}_${filterMonth ? getMonthName(filterMonth) : 'All'}.csv`;
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function getMonthName(monthNum) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months[monthNum - 1];
+        }
+
+        function backupData() {
+            const backupData = {
+                orders: orders,
+                prices: prices,
+                currentOrderNumber: currentOrderNumber,
+                backupDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const filename = `AJC_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (confirm('This will replace all current data with the backup. Continue?')) {
+                        orders = backupData.orders || [];
+                        prices = backupData.prices || prices;
+                        currentOrderNumber = backupData.currentOrderNumber || 1;
+                        
+                        saveOrders();
+                        updateProductList();
+                        updatePriceList();
+                        displayOrders();
+                        
+                        alert('Data restored successfully!');
+                    }
+                } catch (error) {
+                    alert('Invalid backup file!');
+                }
+            };
+            reader.readAsText(file);
         }
 
         async function testBackendConnection() {
@@ -818,6 +1407,7 @@
         }
 
         window.onload = function() {
+            loadOrders(); // Load saved orders
             updateProductList();
             updatePriceList();
             showProductFields();
@@ -843,10 +1433,10 @@
 
     <div class="price-list">
         <h2>PRICE LIST AND QUANTITY</h2>
-        <h3>Chilly = 2rs/per peice</h3>
+        <h3>Chilly = 2rs/per piece</h3>
         <h3>Tomato = 5rs/per piece</h3>
         <h3>Capsicum = 20rs/per piece</h3>
-        <h3>spinach = 20rs/per piece</h3
+        <h3>Spinach = 20rs/per piece</h3>
         <h3>Cabbage = 50rs/per piece</h3>
         <h3>Ladies finger = 2rs/per piece</h3>
         <h3>Cauliflower = 50rs/per piece</h3>
@@ -953,7 +1543,7 @@
             <img src="static/images/tomatop.jpg" alt="Tomato Plants">
             <img src="static/images/chillyp.jpg" alt="Chilly Plants">
             <img src="static/images/chillyp2.jpg" alt="Chilly Plants 2">
-            <img src="cabbagep.jpg" alt="cabbage plant "
+            <img src="static/images/cabbagep.jpg" alt="Cabbage Plant">
             <p>Fresh and quality vegetables since 2023.</p>
 
             <h2>OUR AIM</h2>
