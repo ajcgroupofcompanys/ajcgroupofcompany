@@ -37,7 +37,7 @@ app.use(express.static('public'));
 app.listen(port, () => {
     console.log(`Server is running on port ${5000}`);
 });
-const API_BASE_URL = '';
+const API_BASE_URL = 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany/';
 
 async function fetchAndRenderOrders() {
   const month = document.getElementById('filterMonth').value;
@@ -82,3 +82,4 @@ function renderOrderStats(orders) {
 
 // Call on page load
 fetchAndRenderOrders();
+
