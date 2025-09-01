@@ -172,9 +172,9 @@
             background-color: white;
             padding: 30px;
             border-radius: 10px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
+            max-width: 90%;
+            width: 800px;
+            max-height: 90vh;
             overflow-y: auto;
         }
 
@@ -217,6 +217,14 @@
         .admin-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+        }
+
+        .admin-btn.secondary {
+            background-color: #008CBA;
+        }
+
+        .admin-btn.secondary:hover {
+            background-color: #007aa3;
         }
 
         .price-edit {
@@ -266,6 +274,13 @@
             background-color: #555;
         }
 
+        .admin-menu {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
         .password-change {
             margin-top: 20px;
             padding: 15px;
@@ -313,6 +328,80 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Order Management Styles */
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .order-table th,
+        .order-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .order-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .order-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .chart-container {
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-container {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .filter-container select,
+        .filter-container input {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
         /* Responsive Design for Mobile Screens */
         @media only screen and (max-width: 600px) {
             body, section, .order-form, .feedback-form {
@@ -321,6 +410,31 @@
                 padding: 0;
                 padding-left: 10px;
                 padding-right: 10px;
+            }
+
+            .admin-content {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .admin-menu {
+                flex-direction: column;
+            }
+
+            .admin-btn {
+                margin: 2px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .order-table th,
+            .order-table td {
+                font-size: 10px;
+                padding: 4px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
             }
 
             nav a {
@@ -388,6 +502,7 @@
             }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         function fadeInOnScroll() {
             const sections = document.querySelectorAll("section");
@@ -404,25 +519,23 @@
         window.addEventListener("scroll", fadeInOnScroll);
         window.onload = fadeInOnScroll;
 
-        // Configuration - Update these values as needed
+        // Configuration
         const CONFIG = {
-            // Set your backend API URL here
-            API_BASE_URL: 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany/', // Replace with your actual backend URL
-            // API_BASE_URL: 'http://localhost:5000', // For local development
+            API_BASE_URL: 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany/',
         };
 
-        // EDIT PRICES HERE - Change these values to update prices across all devices
+        // EDIT PRICES HERE
         let prices = {
-            "chilly": 2,         // Price per peice
-            "tomato": 5,         // Price per piece
-            "spinach": 10,       // Price per piece
-            "ladies_finger": 2,  // Price per piece
-            "cabbage": 50,       // Price per piece
-            "capsicum": 20,      // Price per piece
-            "cauliflower": 50    // Price per piece
+            "chilly": 2,
+            "tomato": 5,
+            "spinach": 10,
+            "ladies_finger": 2,
+            "cabbage": 50,
+            "capsicum": 20,
+            "cauliflower": 50
         };
 
-        // ADMIN PASSWORD - Change this to update admin access
+        // ADMIN PASSWORD
         let adminPassword = 'ajc2025';
 
         let productImages = {
@@ -436,6 +549,56 @@
         };
 
         let isAdminLoggedIn = false;
+        let currentAdminView = 'prices';
+
+        // Order Management System
+        let orderData = [];
+        let orderCounter = 1;
+
+        // Initialize order data from API
+        async function initializeOrderData() {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/api/orders`);
+                if (response.ok) {
+                    const data = await response.json();
+                    orderData = data.orders || [];
+                    orderCounter = data.nextOrderNumber || 1;
+                }
+            } catch (error) {
+                console.log('Using local order storage');
+                const localOrders = localStorage.getItem('ajc_orders');
+                const localCounter = localStorage.getItem('ajc_order_counter');
+                if (localOrders) {
+                    orderData = JSON.parse(localOrders);
+                }
+                if (localCounter) {
+                    orderCounter = parseInt(localCounter);
+                }
+            }
+        }
+
+        // Save order to backend and local storage
+        async function saveOrderData() {
+            // Save to local storage as backup
+            localStorage.setItem('ajc_orders', JSON.stringify(orderData));
+            localStorage.setItem('ajc_order_counter', orderCounter.toString());
+
+            // Try to save to backend
+            try {
+                await fetch(`${CONFIG.API_BASE_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orders: orderData,
+                        nextOrderNumber: orderCounter
+                    })
+                });
+            } catch (error) {
+                console.log('Could not sync to backend, using local storage');
+            }
+        }
 
         function updateProductList() {
             for (let i = 1; i <= 5; i++) {
@@ -498,6 +661,7 @@
             const itemCount = document.getElementById("itemCount").value;
             let totalAmount = 0;
             let hasProducts = false;
+            let orderItems = [];
 
             for (let i = 1; i <= itemCount; i++) {
                 const product = document.getElementById("product" + i).value;
@@ -507,6 +671,13 @@
                     const total = prices[product] * quantity;
                     body += "Product " + i + ": " + product.replace(/_/g, ' ') + "%0D%0AQuantity: " + quantity + "%0D%0ATotal Cost: Rs " + total + "%0D%0A%0D%0A";
                     totalAmount += total;
+                    
+                    orderItems.push({
+                        product: product.replace(/_/g, ' '),
+                        quantity: quantity,
+                        price: prices[product],
+                        total: total
+                    });
                 }
             }
 
@@ -516,6 +687,19 @@
             }
 
             body += "Net Amount: Rs " + totalAmount;
+
+            // Store order data
+            const orderRecord = {
+                orderNumber: orderCounter++,
+                date: new Date().toISOString(),
+                customerName: name,
+                customerEmail: email,
+                items: orderItems,
+                totalAmount: totalAmount
+            };
+
+            orderData.push(orderRecord);
+            saveOrderData();
 
             const subject = "Order from " + name;
             const mailtoLink = "mailto:ajcgroupofcompany41@gmail.com?subject=" + encodeURIComponent(subject) + "&body=" + body;
@@ -590,7 +774,7 @@
             if (!isAdminLoggedIn) {
                 showAdminLogin();
             } else {
-                showPriceEditor();
+                showAdminDashboard();
             }
         }
 
@@ -616,16 +800,37 @@
             const inputPassword = document.getElementById('adminPasswordInput').value;
             if (inputPassword === adminPassword) {
                 isAdminLoggedIn = true;
-                showPriceEditor();
+                showAdminDashboard();
             } else {
                 document.getElementById('loginError').style.display = 'block';
             }
         }
 
+        function showAdminDashboard() {
+            switch(currentAdminView) {
+                case 'orders':
+                    showOrderManagement();
+                    break;
+                case 'analytics':
+                    showAnalytics();
+                    break;
+                case 'prices':
+                default:
+                    showPriceEditor();
+                    break;
+            }
+        }
+
         function showPriceEditor() {
+            currentAdminView = 'prices';
             const adminContent = document.getElementById('adminContent');
             let html = `
                 <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
+                <div class="admin-menu">
+                    <button class="admin-btn secondary" onclick="currentAdminView='prices'; showAdminDashboard()">Price Management</button>
+                    <button class="admin-btn" onclick="currentAdminView='orders'; showAdminDashboard()">Order Management</button>
+                    <button class="admin-btn" onclick="currentAdminView='analytics'; showAdminDashboard()">Analytics</button>
+                </div>
                 <h2 class="admin-header">Price Management</h2>
             `;
 
@@ -664,22 +869,456 @@
                     <p id="passwordError" style="color: red; display: none;"></p>
                     <p id="passwordSuccess" style="color: green; display: none;"></p>
                 </div>
-
-                <div style="margin-top: 20px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
-                    <h4 style="color: #333; margin-top: 0;">Backend API Status:</h4>
-                    <p style="font-size: 12px; color: #666; margin: 5px 0;">
-                        API URL: <code>${CONFIG.API_BASE_URL}</code>
-                    </p>
-                    <button class="admin-btn" onclick="testBackendConnection()" style="padding: 5px 10px; font-size: 12px;">Test Connection</button>
-                    <div id="connectionStatus" style="margin-top: 10px;"></div>
-                </div>
             `;
 
             adminContent.innerHTML = html;
         }
 
+        function showOrderManagement() {
+            currentAdminView = 'orders';
+            const adminContent = document.getElementById('adminContent');
+            
+            let html = `
+                <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
+                <div class="admin-menu">
+                    <button class="admin-btn" onclick="currentAdminView='prices'; showAdminDashboard()">Price Management</button>
+                    <button class="admin-btn secondary" onclick="currentAdminView='orders'; showAdminDashboard()">Order Management</button>
+                    <button class="admin-btn" onclick="currentAdminView='analytics'; showAdminDashboard()">Analytics</button>
+                </div>
+                <h2 class="admin-header">Order Management</h2>
+                
+                <div class="filter-container">
+                    <label>Filter by Date Range:</label>
+                    <input type="date" id="startDate" onchange="filterOrders()">
+                    <input type="date" id="endDate" onchange="filterOrders()">
+                    <select id="monthFilter" onchange="filterOrders()">
+                        <option value="">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="yearFilter" onchange="filterOrders()">
+                        <option value="">All Years</option>
+                    </select>
+                    <button class="admin-btn" onclick="clearOrderData()">Clear All Orders</button>
+                </div>
+
+                <div id="orderStats" class="stats-grid">
+                </div>
+
+                <div id="orderTableContainer">
+                    <table class="order-table" id="orderTable">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Email</th>
+                                <th>Items</th>
+                                <th>Amount (Rs)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            adminContent.innerHTML = html;
+            populateYearFilter();
+            displayOrders();
+        }
+
+        function showAnalytics() {
+            currentAdminView = 'analytics';
+            const adminContent = document.getElementById('adminContent');
+            
+            let html = `
+                <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
+                <div class="admin-menu">
+                    <button class="admin-btn" onclick="currentAdminView='prices'; showAdminDashboard()">Price Management</button>
+                    <button class="admin-btn" onclick="currentAdminView='orders'; showAdminDashboard()">Order Management</button>
+                    <button class="admin-btn secondary" onclick="currentAdminView='analytics'; showAdminDashboard()">Analytics</button>
+                </div>
+                <h2 class="admin-header">Sales Analytics</h2>
+                
+                <div class="filter-container">
+                    <label>View:</label>
+                    <select id="analyticsView" onchange="updateAnalytics()">
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <select id="analyticsYear" onchange="updateAnalytics()">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+
+                <div id="analyticsStats" class="stats-grid">
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="salesChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="productChart" width="400" height="200"></canvas>
+                </div>
+            `;
+
+            adminContent.innerHTML = html;
+            populateAnalyticsYearFilter();
+            updateAnalytics();
+        }
+
+        function populateYearFilter() {
+            const yearFilter = document.getElementById('yearFilter');
+            const years = [...new Set(orderData.map(order => new Date(order.date).getFullYear()))].sort().reverse();
+            
+            yearFilter.innerHTML = '<option value="">All Years</option>';
+            years.forEach(year => {
+                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
+        function populateAnalyticsYearFilter() {
+            const yearFilter = document.getElementById('analyticsYear');
+            const years = [...new Set(orderData.map(order => new Date(order.date).getFullYear()))].sort().reverse();
+            
+            yearFilter.innerHTML = '<option value="">All Years</option>';
+            years.forEach(year => {
+                yearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
+        function filterOrders() {
+            displayOrders();
+        }
+
+        function getFilteredOrders() {
+            const startDate = document.getElementById('startDate')?.value;
+            const endDate = document.getElementById('endDate')?.value;
+            const monthFilter = document.getElementById('monthFilter')?.value;
+            const yearFilter = document.getElementById('yearFilter')?.value;
+
+            return orderData.filter(order => {
+                const orderDate = new Date(order.date);
+                
+                if (startDate && orderDate < new Date(startDate)) return false;
+                if (endDate && orderDate > new Date(endDate)) return false;
+                if (monthFilter && (orderDate.getMonth() + 1) != monthFilter) return false;
+                if (yearFilter && orderDate.getFullYear() != yearFilter) return false;
+                
+                return true;
+            });
+        }
+
+        function displayOrders() {
+            const filteredOrders = getFilteredOrders();
+            const tbody = document.getElementById('orderTableBody');
+            
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            
+            filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(order => {
+                const row = tbody.insertRow();
+                const date = new Date(order.date);
+                const itemsList = order.items.map(item => `${item.product} (${item.quantity})`).join(', ');
+                
+                row.innerHTML = `
+                    <td>#${order.orderNumber}</td>
+                    <td>${date.toLocaleDateString()}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.customerEmail}</td>
+                    <td>${itemsList}</td>
+                    <td>Rs ${order.totalAmount}</td>
+                    <td><button class="admin-btn" style="font-size: 10px; padding: 4px 8px;" onclick="viewOrderDetails(${order.orderNumber})">View</button></td>
+                `;
+            });
+
+            updateOrderStats(filteredOrders);
+        }
+
+        function updateOrderStats(orders) {
+            const statsContainer = document.getElementById('orderStats');
+            if (!statsContainer) return;
+
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const avgOrderValue = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0;
+            
+            const today = new Date();
+            const todayOrders = orders.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate.toDateString() === today.toDateString();
+            });
+            
+            const thisMonth = orders.filter(order => {
+                const orderDate = new Date(order.date);
+                return orderDate.getMonth() === today.getMonth() && 
+                       orderDate.getFullYear() === today.getFullYear();
+            });
+
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalOrders}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">Rs ${totalRevenue}</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">Rs ${avgOrderValue}</div>
+                    <div class="stat-label">Avg Order Value</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${todayOrders.length}</div>
+                    <div class="stat-label">Today's Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${thisMonth.length}</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+            `;
+        }
+
+        function updateAnalytics() {
+            const view = document.getElementById('analyticsView')?.value || 'monthly';
+            const year = document.getElementById('analyticsYear')?.value;
+            
+            let filteredOrders = orderData;
+            if (year) {
+                filteredOrders = orderData.filter(order => new Date(order.date).getFullYear() == year);
+            }
+
+            updateAnalyticsStats(filteredOrders);
+            updateSalesChart(filteredOrders, view);
+            updateProductChart(filteredOrders);
+        }
+
+        function updateAnalyticsStats(orders) {
+            const statsContainer = document.getElementById('analyticsStats');
+            if (!statsContainer) return;
+
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+            const totalOrders = orders.length;
+            const avgOrderValue = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(2) : 0;
+
+            // Product sales
+            const productSales = {};
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (!productSales[item.product]) {
+                        productSales[item.product] = { quantity: 0, revenue: 0 };
+                    }
+                    productSales[item.product].quantity += item.quantity;
+                    productSales[item.product].revenue += item.total;
+                });
+            });
+
+            const bestSellingProduct = Object.keys(productSales).reduce((best, product) => 
+                !best || productSales[product].quantity > productSales[best].quantity ? product : best, null);
+
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">Rs ${totalRevenue}</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalOrders}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">Rs ${avgOrderValue}</div>
+                    <div class="stat-label">Average Order</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${bestSellingProduct || 'None'}</div>
+                    <div class="stat-label">Best Selling</div>
+                </div>
+            `;
+        }
+
+        let salesChart = null;
+        let productChart = null;
+
+        function updateSalesChart(orders, view) {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+
+            if (salesChart) {
+                salesChart.destroy();
+            }
+
+            let labels = [];
+            let data = [];
+
+            if (view === 'monthly') {
+                const monthlyData = {};
+                orders.forEach(order => {
+                    const date = new Date(order.date);
+                    const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                    if (!monthlyData[key]) monthlyData[key] = 0;
+                    monthlyData[key] += order.totalAmount;
+                });
+
+                labels = Object.keys(monthlyData).sort();
+                data = labels.map(label => monthlyData[label]);
+            } else {
+                const yearlyData = {};
+                orders.forEach(order => {
+                    const year = new Date(order.date).getFullYear();
+                    if (!yearlyData[year]) yearlyData[year] = 0;
+                    yearlyData[year] += order.totalAmount;
+                });
+
+                labels = Object.keys(yearlyData).sort();
+                data = labels.map(label => yearlyData[label]);
+            }
+
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Sales Revenue (${view === 'monthly' ? 'Monthly' : 'Yearly'})`,
+                        data: data,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Sales Trend - ${view === 'monthly' ? 'Monthly' : 'Yearly'}`
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateProductChart(orders) {
+            const ctx = document.getElementById('productChart');
+            if (!ctx) return;
+
+            if (productChart) {
+                productChart.destroy();
+            }
+
+            const productSales = {};
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (!productSales[item.product]) {
+                        productSales[item.product] = 0;
+                    }
+                    productSales[item.product] += item.total;
+                });
+            });
+
+            const labels = Object.keys(productSales);
+            const data = Object.values(productSales);
+
+            productChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Revenue by Product'
+                        }
+                    }
+                }
+            });
+        }
+
+        function viewOrderDetails(orderNumber) {
+            const order = orderData.find(o => o.orderNumber === orderNumber);
+            if (!order) return;
+
+            const date = new Date(order.date);
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `<tr>
+                    <td>${item.product}</td>
+                    <td>${item.quantity}</td>
+                    <td>Rs ${item.price}</td>
+                    <td>Rs ${item.total}</td>
+                </tr>`;
+            });
+
+            const detailHtml = `
+                <div style="padding: 20px;">
+                    <h3>Order Details - #${order.orderNumber}</h3>
+                    <p><strong>Date:</strong> ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</p>
+                    <p><strong>Customer:</strong> ${order.customerName}</p>
+                    <p><strong>Email:</strong> ${order.customerEmail}</p>
+                    
+                    <h4>Items Ordered:</h4>
+                    <table class="order-table">
+                        <thead>
+                            <tr><th>Product</th><th>Quantity</th><th>Price</th><th>Total</th></tr>
+                        </thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    
+                    <p style="font-size: 16px; font-weight: bold; margin-top: 15px;">
+                        Total Amount: Rs ${order.totalAmount}
+                    </p>
+                    
+                    <button class="admin-btn" onclick="showOrderManagement()">Back to Orders</button>
+                    <button class="admin-btn" style="background-color: #f44336;" onclick="deleteOrder(${order.orderNumber})">Delete Order</button>
+                </div>
+            `;
+
+            document.getElementById('adminContent').innerHTML = detailHtml;
+        }
+
+        function deleteOrder(orderNumber) {
+            if (confirm('Are you sure you want to delete this order?')) {
+                orderData = orderData.filter(order => order.orderNumber !== orderNumber);
+                saveOrderData();
+                showOrderManagement();
+            }
+        }
+
+        function clearOrderData() {
+            if (confirm('Are you sure you want to clear all order data? This cannot be undone!')) {
+                orderData = [];
+                orderCounter = 1;
+                saveOrderData();
+                showOrderManagement();
+            }
+        }
+
         async function testBackendConnection() {
             const statusDiv = document.getElementById('connectionStatus');
+            if (!statusDiv) return;
+            
             statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connection...';
 
             try {
@@ -696,7 +1335,7 @@
         }
 
         async function savePrices() {
-            const adminSecret = document.getElementById('adminSecret').value.trim();
+            const adminSecret = document.getElementById('adminSecret')?.value?.trim();
             const savePricesBtn = document.getElementById('savePricesBtn');
             const statusDiv = document.getElementById('updateStatus');
 
@@ -705,7 +1344,6 @@
                 return;
             }
 
-            // Update prices in memory first
             for (let item in prices) {
                 const newPrice = parseFloat(document.getElementById(`price_${item}`).value);
                 if (!isNaN(newPrice) && newPrice >= 0) {
@@ -713,12 +1351,10 @@
                 }
             }
 
-            // Update local displays immediately
             updateProductList();
             updatePriceList();
             calculateTotal();
 
-            // Disable button and show loading
             savePricesBtn.disabled = true;
             savePricesBtn.innerHTML = '<div class="loading-spinner"></div>Updating GitHub...';
             statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Updating prices in GitHub repository...</div>';
@@ -766,24 +1402,20 @@
                     </div>
                 `;
             } finally {
-                // Re-enable button
                 savePricesBtn.disabled = false;
                 savePricesBtn.innerHTML = 'Update Prices & Push to GitHub';
-
-                // Clear admin secret for security
                 document.getElementById('adminSecret').value = '';
             }
         }
 
         function changePassword() {
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const currentPassword = document.getElementById('currentPassword')?.value;
+            const newPassword = document.getElementById('newPassword')?.value;
+            const confirmPassword = document.getElementById('confirmPassword')?.value;
 
             const errorElement = document.getElementById('passwordError');
             const successElement = document.getElementById('passwordSuccess');
 
-            // Hide previous messages
             errorElement.style.display = 'none';
             successElement.style.display = 'none';
 
@@ -805,19 +1437,18 @@
                 return;
             }
 
-            // Update password
             adminPassword = newPassword;
 
             successElement.textContent = 'Password changed successfully! Remember to update it in your GitHub code too.';
             successElement.style.display = 'block';
 
-            // Clear form
             document.getElementById('currentPassword').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
         }
 
-        window.onload = function() {
+        window.onload = async function() {
+            await initializeOrderData();
             updateProductList();
             updatePriceList();
             showProductFields();
@@ -1001,4 +1632,5 @@
 
 </body>
 </html>
+
 
