@@ -514,14 +514,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-       // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAwI4RtAEtKgTyXdzY0dW3P81I-sWybXr4",
   authDomain: "ajcweb-4ab7c.firebaseapp.com",
@@ -532,9 +525,6 @@ const firebaseConfig = {
   measurementId: "G-BRD1DPJ662"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
         // Initialize Firebase
         let firebaseInitialized = false;
@@ -542,7 +532,7 @@ const analytics = getAnalytics(app);
 
         function initializeFirebase() {
             try {
-                if (!firebaseInitialized && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                if (!firebaseInitialized && firebaseConfig.apiKey !== "AIzaSyAwI4RtAEtKgTyXdzY0dW3P81I-sWybXr4") {
                     firebase.initializeApp(firebaseConfig);
                     database = firebase.database();
                     firebaseInitialized = true;
@@ -1681,6 +1671,7 @@ const analytics = getAnalytics(app);
 
 </body>
 </html>
+
 
 
 
