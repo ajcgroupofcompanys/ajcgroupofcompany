@@ -514,16 +514,27 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // Firebase Configuration - REPLACE WITH YOUR CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwI4RtAEtKgTyXdzY0dW3P81I-sWybXr4",
-            authDomain: "ajcweb-4ab7c.firebaseapp.com",
-            projectId: "ajcweb-4ab7c",
-            storageBucket: "ajcweb-4ab7c.firebasestorage.app",
-            messagingSenderId: "399193474584",
-            appId: "1:399193474584:web:22683dbb853946a4f0a56d",
-            measurementId: "G-BRD1DPJ662"
-        };
+       // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAwI4RtAEtKgTyXdzY0dW3P81I-sWybXr4",
+  authDomain: "ajcweb-4ab7c.firebaseapp.com",
+  projectId: "ajcweb-4ab7c",
+  storageBucket: "ajcweb-4ab7c.firebasestorage.app",
+  messagingSenderId: "399193474584",
+  appId: "1:399193474584:web:22683dbb853946a4f0a56d",
+  measurementId: "G-BRD1DPJ662"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
         // Initialize Firebase
         let firebaseInitialized = false;
@@ -1670,6 +1681,7 @@
 
 </body>
 </html>
+
 
 
 
