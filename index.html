@@ -402,6 +402,28 @@
             margin-top: 5px;
         }
 
+        .firebase-status {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .firebase-status.show {
+            opacity: 1;
+        }
+
+        .firebase-status.error {
+            background: #f44336;
+        }
+
         /* Responsive Design for Mobile Screens */
         @media only screen and (max-width: 600px) {
             body, section, .order-form, .feedback-form {
@@ -486,24 +508,55 @@
                 margin: 10px 0;
             }
         }
-
-        @media only screen and (orientation: landscape) and (max-width: 600px) {
-            nav a {
-                font-size: 16px;
-            }
-
-            .order-form, .feedback-form {
-                max-width: 95%;
-            }
-
-            .order-form input[type="submit"],
-            .feedback-form input[type="submit"] {
-                width: 100%;
-            }
-        }
     </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
+        // Firebase Configuration - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com/",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let firebaseInitialized = false;
+        let database = null;
+
+        function initializeFirebase() {
+            try {
+                if (!firebaseInitialized && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                    firebase.initializeApp(firebaseConfig);
+                    database = firebase.database();
+                    firebaseInitialized = true;
+                    showFirebaseStatus("Connected to Firebase", false);
+                    console.log("Firebase initialized successfully");
+                    return true;
+                }
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                showFirebaseStatus("Firebase connection failed", true);
+                return false;
+            }
+            return false;
+        }
+
+        function showFirebaseStatus(message, isError) {
+            const statusElement = document.getElementById('firebaseStatus');
+            statusElement.textContent = message;
+            statusElement.className = `firebase-status show ${isError ? 'error' : ''}`;
+            
+            setTimeout(() => {
+                statusElement.classList.remove('show');
+            }, 3000);
+        }
+
         function fadeInOnScroll() {
             const sections = document.querySelectorAll("section");
             const windowHeight = window.innerHeight;
@@ -518,11 +571,6 @@
 
         window.addEventListener("scroll", fadeInOnScroll);
         window.onload = fadeInOnScroll;
-
-        // Configuration
-        const CONFIG = {
-            API_BASE_URL: 'https://ajcgroupofcompanys.github.io/ajcgroupofcompany/',
-        };
 
         // EDIT PRICES HERE
         let prices = {
@@ -555,48 +603,82 @@
         let orderData = [];
         let orderCounter = 1;
 
-        // Initialize order data from API
+        // Firebase Order Functions
         async function initializeOrderData() {
-            try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/orders`);
-                if (response.ok) {
-                    const data = await response.json();
-                    orderData = data.orders || [];
-                    orderCounter = data.nextOrderNumber || 1;
+            if (firebaseInitialized && database) {
+                try {
+                    // Listen for real-time updates
+                    database.ref('orders').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            orderData = Object.values(data);
+                            console.log(`Loaded ${orderData.length} orders from Firebase`);
+                            if (currentAdminView === 'orders') {
+                                displayOrders();
+                            }
+                        } else {
+                            orderData = [];
+                        }
+                    });
+
+                    // Get order counter
+                    database.ref('settings/orderCounter').once('value', (snapshot) => {
+                        const counter = snapshot.val();
+                        if (counter) {
+                            orderCounter = counter;
+                        }
+                    });
+
+                    showFirebaseStatus("Orders synced", false);
+                } catch (error) {
+                    console.error('Failed to load from Firebase:', error);
+                    showFirebaseStatus("Sync failed", true);
+                    // Fallback to localStorage
+                    loadFromLocalStorage();
                 }
-            } catch (error) {
-                console.log('Using local order storage');
-                const localOrders = localStorage.getItem('ajc_orders');
-                const localCounter = localStorage.getItem('ajc_order_counter');
-                if (localOrders) {
-                    orderData = JSON.parse(localOrders);
-                }
-                if (localCounter) {
-                    orderCounter = parseInt(localCounter);
-                }
+            } else {
+                // Fallback to localStorage when Firebase is not configured
+                loadFromLocalStorage();
             }
         }
 
-        // Save order to backend and local storage
+        function loadFromLocalStorage() {
+            const localOrders = localStorage.getItem('ajc_orders');
+            const localCounter = localStorage.getItem('ajc_order_counter');
+            
+            if (localOrders) {
+                orderData = JSON.parse(localOrders);
+            }
+            if (localCounter) {
+                orderCounter = parseInt(localCounter);
+            }
+        }
+
         async function saveOrderData() {
-            // Save to local storage as backup
+            // Always save to localStorage as backup
             localStorage.setItem('ajc_orders', JSON.stringify(orderData));
             localStorage.setItem('ajc_order_counter', orderCounter.toString());
 
-            // Try to save to backend
-            try {
-                await fetch(`${CONFIG.API_BASE_URL}/api/orders`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        orders: orderData,
-                        nextOrderNumber: orderCounter
-                    })
-                });
-            } catch (error) {
-                console.log('Could not sync to backend, using local storage');
+            // Save to Firebase if available
+            if (firebaseInitialized && database) {
+                try {
+                    // Save all orders
+                    const ordersRef = database.ref('orders');
+                    const ordersObj = {};
+                    orderData.forEach(order => {
+                        ordersObj[order.orderNumber] = order;
+                    });
+                    await ordersRef.set(ordersObj);
+                    
+                    // Save order counter
+                    await database.ref('settings/orderCounter').set(orderCounter);
+                    
+                    showFirebaseStatus("Orders saved", false);
+                    console.log('Orders saved to Firebase successfully');
+                } catch (error) {
+                    console.error('Failed to save to Firebase:', error);
+                    showFirebaseStatus("Save failed", true);
+                }
             }
         }
 
@@ -761,7 +843,7 @@
                 let html = '<h2>PRICE LIST AND QUANTITY</h2>';
                 for (let item in prices) {
                     if (productNames[item]) {
-                        let unit = item === 'chilly' ? '/5g' : '/per piece';
+                        let unit = item === 'chilly' ? '/2g' : '/per piece';
                         html += `<h3>${productNames[item]} = ${prices[item]}rs${unit}</h3>`;
                     }
                 }
@@ -789,6 +871,10 @@
                 <button class="admin-btn close" onclick="hideAdminPanel()">×</button>
                 <div class="admin-login">
                     <h2 class="admin-header">Admin Login</h2>
+                    ${!firebaseInitialized ? 
+                        '<div class="status-box status-info">Note: Firebase not configured. Using local storage only.</div>' : 
+                        '<div class="status-box status-success">✅ Firebase connected - Real-time sync enabled</div>'
+                    }
                     <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password" />
                     <button class="admin-btn" onclick="adminLogin()">Login</button>
                     <p id="loginError" style="color: red; display: none;">Incorrect password!</p>
@@ -832,6 +918,10 @@
                     <button class="admin-btn" onclick="currentAdminView='analytics'; showAdminDashboard()">Analytics</button>
                 </div>
                 <h2 class="admin-header">Price Management</h2>
+                ${!firebaseInitialized ? 
+                    '<div class="status-box status-info">Prices will be saved locally only. Configure Firebase for sync across devices.</div>' : 
+                    '<div class="status-box status-success">✅ Firebase connected - Changes will sync across all devices</div>'
+                }
             `;
 
             const productNames = {
@@ -854,10 +944,7 @@
             }
 
             html += `
-                <label for="adminSecret" style="display: block; margin-top: 15px; font-weight: bold;">Admin Secret Key:</label>
-                <input type="password" id="adminSecret" placeholder="Enter admin secret for GitHub updates" style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" />
-
-                <button class="admin-btn" id="savePricesBtn" onclick="savePrices()">Update Prices & Push to GitHub</button>
+                <button class="admin-btn" id="savePricesBtn" onclick="savePrices()">Update Prices</button>
                 <div id="updateStatus" style="margin-top: 15px;"></div>
 
                 <div class="password-change">
@@ -886,6 +973,10 @@
                     <button class="admin-btn" onclick="currentAdminView='analytics'; showAdminDashboard()">Analytics</button>
                 </div>
                 <h2 class="admin-header">Order Management</h2>
+                ${!firebaseInitialized ? 
+                    '<div class="status-box status-error">⚠️ Firebase not configured. Orders visible on this device only.</div>' : 
+                    '<div class="status-box status-success">✅ Real-time sync enabled - Orders visible on all devices</div>'
+                }
                 
                 <div class="filter-container">
                     <label>Filter by Date Range:</label>
@@ -1315,34 +1406,9 @@
             }
         }
 
-        async function testBackendConnection() {
-            const statusDiv = document.getElementById('connectionStatus');
-            if (!statusDiv) return;
-            
-            statusDiv.innerHTML = '<div class="loading-spinner"></div>Testing connection...';
-
-            try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/health`);
-                if (response.ok) {
-                    const data = await response.json();
-                    statusDiv.innerHTML = '<div class="status-box status-success">✅ Backend connection successful!</div>';
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (error) {
-                statusDiv.innerHTML = `<div class="status-box status-error">❌ Backend connection failed: ${error.message}</div>`;
-            }
-        }
-
         async function savePrices() {
-            const adminSecret = document.getElementById('adminSecret')?.value?.trim();
             const savePricesBtn = document.getElementById('savePricesBtn');
             const statusDiv = document.getElementById('updateStatus');
-
-            if (!adminSecret) {
-                statusDiv.innerHTML = '<div class="status-box status-error">Please enter the admin secret key.</div>';
-                return;
-            }
 
             for (let item in prices) {
                 const newPrice = parseFloat(document.getElementById(`price_${item}`).value);
@@ -1356,56 +1422,24 @@
             calculateTotal();
 
             savePricesBtn.disabled = true;
-            savePricesBtn.innerHTML = '<div class="loading-spinner"></div>Updating GitHub...';
-            statusDiv.innerHTML = '<div class="status-box status-info"><div class="loading-spinner"></div>Updating prices in GitHub repository...</div>';
-
-            try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/api/update-prices`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        prices: prices,
-                        adminSecret: adminSecret
-                    })
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    statusDiv.innerHTML = `
-                        <div class="status-box status-success">
-                            ✅ Success! Prices updated in GitHub repository.
-                            <br>
-                            <small>Changes will be live on all devices within a few minutes.</small>
-                            ${result.commit ? `<br><a href="${result.commit}" target="_blank">View Commit</a>` : ''}
-                        </div>
-                    `;
-                } else {
-                    statusDiv.innerHTML = `
-                        <div class="status-box status-error">
-                            ❌ Failed to update GitHub: ${result.error}
-                            <br>
-                            <small>${result.details || 'Please check your admin secret and try again.'}</small>
-                        </div>
-                    `;
+            savePricesBtn.innerHTML = '<div class="loading-spinner"></div>Updating...';
+            
+            if (firebaseInitialized && database) {
+                try {
+                    await database.ref('settings/prices').set(prices);
+                    statusDiv.innerHTML = '<div class="status-box status-success">✅ Prices updated successfully! Changes synced across all devices.</div>';
+                    showFirebaseStatus("Prices updated", false);
+                } catch (error) {
+                    console.error('Failed to save prices to Firebase:', error);
+                    statusDiv.innerHTML = '<div class="status-box status-error">❌ Failed to sync prices to Firebase</div>';
+                    showFirebaseStatus("Price sync failed", true);
                 }
-
-            } catch (error) {
-                console.error('Error updating prices:', error);
-                statusDiv.innerHTML = `
-                    <div class="status-box status-error">
-                        ❌ Connection error: ${error.message}
-                        <br>
-                        <small>Please check if the backend server is running.</small>
-                    </div>
-                `;
-            } finally {
-                savePricesBtn.disabled = false;
-                savePricesBtn.innerHTML = 'Update Prices & Push to GitHub';
-                document.getElementById('adminSecret').value = '';
+            } else {
+                statusDiv.innerHTML = '<div class="status-box status-info">Prices updated locally. Configure Firebase for sync across devices.</div>';
             }
+
+            savePricesBtn.disabled = false;
+            savePricesBtn.innerHTML = 'Update Prices';
         }
 
         function changePassword() {
@@ -1439,7 +1473,7 @@
 
             adminPassword = newPassword;
 
-            successElement.textContent = 'Password changed successfully! Remember to update it in your GitHub code too.';
+            successElement.textContent = 'Password changed successfully!';
             successElement.style.display = 'block';
 
             document.getElementById('currentPassword').value = '';
@@ -1448,6 +1482,7 @@
         }
 
         window.onload = async function() {
+            initializeFirebase();
             await initializeOrderData();
             updateProductList();
             updatePriceList();
@@ -1620,6 +1655,9 @@
         <p>© 2025 AJC Group of Company. All rights reserved.</p>
     </footer>
 
+    <!-- Firebase Status Indicator -->
+    <div id="firebaseStatus" class="firebase-status"></div>
+
     <!-- Admin Panel -->
     <div id="adminPanel" class="admin-panel">
         <div class="admin-content" id="adminContent">
@@ -1632,6 +1670,7 @@
 
 </body>
 </html>
+
 
 
 
